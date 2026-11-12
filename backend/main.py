@@ -280,3 +280,121 @@ def resumen():
         no_show_evitados=no_show_evitados,
         ahorro_mxn=no_show_evitados * CARGO_NO_SHOW_MXN,
     )
+
+
+# =========================================================================
+# F4 · Chat simulado con la agencia aduanal
+# =========================================================================
+# Esta sección va al final del archivo a propósito (acuerdo con Oli: F3 va
+# antes de /api/resumen y F4 al final), así el merge no choca. Por la misma
+# razón, sus imports están aquí y no arriba.
+#
+# El chat es SIMULADO: no hay WhatsApp. En la demo, alguien del equipo
+# escribe como si fuera la agencia, y la IA (ia.interpretar_mensaje)
+# interpreta lo que escribe.
+
+from modelos import Mensaje, MensajeAgencia  # noqa: E402
+from semaforo import NOMBRES_DOCUMENTO  # noqa: E402
+
+# Textos para los mensajes que escribe PORTIX en el chat.
+TEXTO_ESTADO = {"ok": "listo", "falta": "falta", "error": "con error", "na": "no aplica"}
+TEXTO_COLOR = {"verde": "verde (sale)", "amarillo": "amarillo (espera)", "rojo": "rojo (reprogramar)"}
+
+# Mensajes de cada contenedor: {id: [Mensaje, ...]}. Viven en memoria, igual
+# que los contenedores: al reiniciar el backend, los chats empiezan de cero.
+conversaciones: dict[str, list[Mensaje]] = {}
+
+
+def aviso_inicial(contenedor: Contenedor) -> Mensaje:
+    """El primer mensaje del chat: PORTIX le avisa a la agencia qué falta."""
+    pendientes = [d for d in contenedor.documentos if d.estado in ("falta", "error")]
+    if pendientes:
+        detalle = "; ".join(
+            f"{NOMBRES_DOCUMENTO[d.tipo]} ({d.nota or TEXTO_ESTADO[d.estado]})" for d in pendientes
+        )
+        texto = (
+            f"Aviso de PORTIX sobre el contenedor {contenedor.id} (cita {contenedor.cita}): "
+            f"falta resolver {detalle}. ¿Nos confirman cuando quede?"
+        )
+    else:
+        texto = f"El contenedor {contenedor.id} tiene todos sus documentos completos."
+    return Mensaje(de="portix", texto=texto, hora=hora_actual())
+
+
+def historial(contenedor: Contenedor) -> list[Mensaje]:
+    """Los mensajes del contenedor. Si el chat es nuevo, empieza con el aviso."""
+    if contenedor.id not in conversaciones:
+        conversaciones[contenedor.id] = [aviso_inicial(contenedor)]
+    return conversaciones[contenedor.id]
+
+
+@app.get("/api/contenedores/{id}/chat")
+def ver_chat(id: str):
+    """El historial del chat con la agencia sobre este contenedor."""
+    return {"mensajes": historial(buscar(id))}
+
+
+# `def` (no `async def`) por la misma razón que revisar-documento: la llamada
+# a Gemini tarda unos segundos y así no congela las demás peticiones.
+@app.post("/api/contenedores/{id}/chat")
+def chat(id: str, cuerpo: MensajeAgencia):
+    """Recibe un mensaje de la agencia, la IA lo interpreta y se actualiza el checklist."""
+    contenedor = buscar(id)
+    texto = cuerpo.texto.strip()
+    if not texto:
+        raise HTTPException(status_code=422, detail="El mensaje está vacío")
+
+    mensajes = historial(contenedor)
+    mensajes.append(Mensaje(de="agencia", texto=texto, hora=hora_actual()))
+
+    # ia.py nunca truena: si Gemini falla, regresa una respuesta de respaldo
+    # con "respaldo": True. Su forma está en ia.InterpretacionMensaje.
+    interpretacion = ia.interpretar_mensaje(texto, contenedor.model_dump())
+
+    # Solo cambiamos el checklist si la IA identificó documento Y estado, no
+    # tiene dudas (confianza baja = revisar a mano) y el contenedor tiene ese
+    # documento. Así un "buenos días" o un mensaje ambiguo no cambia nada.
+    renglon = None
+    if (
+        interpretacion["documento"] != "ninguno"
+        and interpretacion["nuevo_estado"] != "sin_cambio"
+        and interpretacion["confianza"] != "baja"
+    ):
+        renglon = next(
+            (d for d in contenedor.documentos if d.tipo == interpretacion["documento"]), None
+        )
+    if renglon:
+        renglon.estado = interpretacion["nuevo_estado"]
+        renglon.nota = f"Agencia {hora_actual()}: {interpretacion['resumen']}"
+        if interpretacion["pendiente"]:
+            renglon.nota += f" Pendiente: {interpretacion['pendiente']}."
+        if interpretacion["respaldo"] and "respaldo" not in renglon.nota.lower():
+            renglon.nota += " (respuesta de respaldo)"
+
+    actualizado = con_semaforo(contenedor)
+
+    # PORTIX contesta en el chat: qué entendió la IA y qué cambió.
+    if renglon:
+        efecto = (
+            f"{NOMBRES_DOCUMENTO[renglon.tipo].capitalize()} queda como "
+            f"'{TEXTO_ESTADO[renglon.estado]}'. El contenedor está en "
+            f"{TEXTO_COLOR[actualizado.color]}."
+        )
+    else:
+        efecto = "No cambió ningún documento; si hace falta, ajústalo a mano en el checklist."
+    if interpretacion["pendiente"]:
+        efecto += f" Pendiente: {interpretacion['pendiente']}."
+    respuesta = f"{interpretacion['resumen']} {efecto}"
+    # El resumen del respaldo ya empieza con "Respuesta de respaldo:", pero lo
+    # aseguramos por si cambia el texto en ia.py.
+    if interpretacion["respaldo"] and "respaldo" not in respuesta.lower():
+        respuesta += " (respuesta de respaldo)"
+    mensajes.append(Mensaje(de="portix", texto=respuesta, hora=hora_actual()))
+
+    return {
+        "interpretacion": interpretacion,
+        "respaldo": interpretacion["respaldo"],
+        "documento_actualizado": renglon.tipo if renglon else None,
+        "contenedor": actualizado,
+        "mensajes": mensajes,
+    }
