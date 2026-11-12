@@ -364,7 +364,12 @@ def chat(id: str, cuerpo: MensajeAgencia):
             (d for d in contenedor.documentos if d.tipo == interpretacion["documento"]), None
         )
     if renglon:
-        renglon.estado = interpretacion["nuevo_estado"]
+        nuevo_estado = interpretacion["nuevo_estado"]
+        # Regla estricta: si la agencia confirma pero todavía debe mandar algo
+        # (un comprobante, un PDF), el documento sigue pendiente hasta recibirlo.
+        if nuevo_estado == "ok" and interpretacion["pendiente"]:
+            nuevo_estado = "falta"
+        renglon.estado = nuevo_estado
         renglon.nota = f"Agencia {hora_actual()}: {interpretacion['resumen']}"
         if interpretacion["pendiente"]:
             renglon.nota += f" Pendiente: {interpretacion['pendiente']}."
