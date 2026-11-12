@@ -198,6 +198,9 @@ En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y co
 | 2026-11-12 | Claude Code | Despliegue en un solo servicio (`servidor.py` y `Dockerfile`) en Render | La API sirve también el frontend compilado: un solo enlace y sin CORS. Las keys van en variables de entorno del servicio |
 | 2026-11-12 | Claude Code | Giro del reto: avisos al operador por SMS y voz con Twilio | SMS de 160 caracteres o menos y sin acentos (GSM-7) con plantilla fija, no con IA, para que no falle; voz que deletrea el contenedor; real con Twilio o simulado y declarado |
 | 2026-11-12 | Claude Code + Twilio | Probar el envío real con la cuenta de prueba de Twilio | La cuenta de prueba rechaza texto propio y voz propia; usamos su plantilla para el SMS real y declaramos simulado el texto de PORTIX y la voz |
+| 2026-11-11 | Claude (plan gratuito) | Generar los datos sintéticos (contenedores, operadores y placas) y simular documentos para probar el programa | Solo datos inventados, para cubrir cada color del semáforo sin usar datos personales reales |
+| 2026-11-11 y 12 | Claude Code | Frontend de las fases 2 a 5: tablero, revisión de documentos, chat con la agencia, vistas con pestañas y estilo visual | El color nunca es la única señal: cada estado y cada hallazgo de la IA también va en texto ("✓ Sí / ✗ No", "Antes Espera → Ahora Sale"). Todo lo simulado o de respaldo se marca en pantalla |
+| 2026-11-12 | Claude Code | Ficha de una página para la entrega (`docs/ficha-PORTIX.pdf`) | Resume problema, solución, giro, impacto y qué es real o simulado, con fuentes |
 
 ## Fuentes
 
