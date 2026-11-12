@@ -6,7 +6,7 @@
 
 import * as falsos from './datosFalsos.js'
 
-export const USAR_DATOS_FALSOS = true
+export const USAR_DATOS_FALSOS = false
 
 // El id lleva espacios ("LTSU 402219-8"), por eso se codifica para la URL.
 const urlContenedor = (id) => `/api/contenedores/${encodeURIComponent(id)}`
