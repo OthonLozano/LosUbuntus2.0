@@ -182,10 +182,13 @@ def _respaldo_revision(datos_viaje: dict, nombre_archivo: str, error: Exception)
     coinciden; si no, simula que todo coincide. La UI la marca como respaldo.
     """
     placas = datos_viaje.get("placas", "")
-    con_error = "error" in nombre_archivo.lower()
+    nombre = nombre_archivo.lower()
+    con_error = "error" in nombre
     placas_doc = placas[::-1] if con_error else placas  # placas "equivocadas" de ejemplo
+    # Sin IA no podemos leer el archivo: adivinamos el tipo por su nombre.
+    tipo = "pedimento" if ("pedimento" in nombre or "comprobante" in nombre) else "carta_porte"
     return {
-        "tipo_detectado": "carta_porte",
+        "tipo_detectado": tipo,
         "legible": True,
         "hallazgos": [
             {
@@ -197,9 +200,9 @@ def _respaldo_revision(datos_viaje: dict, nombre_archivo: str, error: Exception)
         ],
         "estado_sugerido": "error" if con_error else "ok",
         "resumen": (
-            "Respuesta de respaldo: las placas de la carta porte no coinciden con la unidad asignada."
+            f"Respuesta de respaldo: las placas del documento ({tipo.replace('_', ' ')}) no coinciden con la unidad asignada."
             if con_error
-            else "Respuesta de respaldo: los datos del documento coinciden con el viaje."
+            else f"Respuesta de respaldo: los datos del documento ({tipo.replace('_', ' ')}) coinciden con el viaje."
         ),
         "respaldo": True,
         "motivo_respaldo": str(error)[:200],
@@ -258,7 +261,8 @@ def _respaldo_mensaje(texto: str, pendientes: list[str], error: Exception) -> di
     t = texto.lower()
     documento: Optional[str] = None
     for tipo, palabras in {
-        "pedimento": ["pedimento"],
+        # "pagado" casi siempre se refiere al pago del pedimento.
+        "pedimento": ["pedimento", "pagad", "pagó"],
         "carta_porte": ["carta porte", "carta-porte"],
         "folio_cita": ["cita", "folio"],
     }.items():
