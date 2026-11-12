@@ -120,6 +120,23 @@ Abre http://localhost:5173. Las llamadas a `/api` se mandan al backend en el pue
 
 El contrato entre el frontend y el backend está en [docs/contrato-api.md](docs/contrato-api.md).
 
+Sin key de Gemini, PORTIX funciona igual, pero la revisión de documentos y el chat usan **respuestas de respaldo**, y la pantalla lo indica.
+
+### Versión de despliegue (un solo servicio)
+
+`backend/servidor.py` sirve la API y también el frontend compilado, con un solo enlace. Para probarlo en local:
+
+```
+cd frontend
+npm run build
+cd ../backend
+uvicorn servidor:app
+```
+
+Abre http://localhost:8000.
+
+En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y corre el backend con Python. En el servicio hay que configurar las variables de entorno `GEMINI_API_KEY`, `GEMINI_MODEL` y `PORTIX_HORA_ACTUAL`.
+
 ## Bitácora de IA
 
 | Fecha | Herramienta | Para qué | Decisión clave |
