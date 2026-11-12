@@ -79,34 +79,38 @@ Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noch
 - **Backend:** FastAPI (Python).
 - **Datos:** archivos JSON sintéticos en el repositorio.
 - **IA:** API de Gemini (plan gratuito de Google AI Studio), aislada en un solo módulo del backend (`ia.py`). Así podemos cambiar de proveedor sin tocar el resto del código, por ejemplo si conseguimos acceso a Sintergica. Si se agota el límite gratuito, la demo usa respuestas de respaldo, que se indican en pantalla como tales.
-- **Avisos:** chat simulado dentro de la app.
+- **Avisos a la agencia:** chat simulado dentro de la app; la IA interpreta las respuestas.
+- **Avisos al operador (giro):** SMS y llamada de voz con la API REST de Twilio, aislada en `avisos.py`.
 - **Desarrollo:** asistido con Claude Code.
 - **Despliegue:** Render, con el `Dockerfile` de la raíz: un solo servicio sirve la API y el frontend. En línea en https://losubuntus2-0.onrender.com/
 
-## Arquitectura (planeada)
+## Arquitectura
 
 ```
-Navegador (React + Vite)
-   ↓ API REST
-FastAPI
-   ├─ semaforo.py → reglas de color y estimación de tiempo
-   ├─ ia.py       → Gemini (revisión de documentos e interpretación de mensajes)
+Navegador (React + Vite): pestañas Panel, Documentos y Chat con la agencia
+   ↓ API REST (/api/...)
+FastAPI (main.py)
+   ├─ semaforo.py → reglas de color, ventana de la cita y llegada estimada
+   ├─ ia.py       → Gemini: revisa documentos, interpreta mensajes de la agencia
+   │                y lee una carta porte para llenar "Agregar contenedor"
+   ├─ avisos.py   → Twilio: SMS y llamada de voz al operador (giro)
    └─ data/*.json → contenedores y congestión (sintéticos)
+servidor.py → en el despliegue, la misma app sirve también el frontend compilado
 ```
 
-Se desplegará como un solo servicio: el backend también servirá el frontend.
+Todo corre como un solo servicio en Render (`Dockerfile` de la raíz). El estado vive en memoria: se carga de los JSON al arrancar y "Reiniciar demo" lo regresa al inicio. Las llamadas a Gemini y Twilio están aisladas en su propio módulo para poder cambiar de proveedor sin tocar el resto.
 
 ## Fuera de alcance
 
-En esta versión no construiremos:
+En esta versión no construimos:
 
-- Conexión real con VUCEM, el SAT o los sistemas de citas de las terminales.
-- WhatsApp real; el chat será simulado.
-- Un modelo predictivo entrenado. No hay datos públicos por hora, así que usaremos reglas y congestión simulada.
+- Conexión real con VUCEM, el SAT o los sistemas de citas de las terminales. Mover o cancelar una cita solo cambia el estado dentro de PORTIX.
+- WhatsApp real con la agencia; el chat es simulado (alguien del equipo escribe como la agencia).
+- Un modelo predictivo entrenado. No hay datos públicos por hora, así que usamos reglas y congestión simulada.
 - Rastreo GPS en tiempo real.
 - Usuarios, login ni soporte para varias empresas.
-- Base de datos; usaremos archivos JSON.
-- Validación de documentos contra el SAT. Solo revisaremos que sean consistentes entre sí.
+- Base de datos; los datos se cargan de archivos JSON y viven en memoria.
+- Validación de documentos contra el SAT. La IA solo revisa que sean consistentes con los datos del viaje.
 - Coordinación entre varias transportistas o agencias, que queda como visión a futuro.
 
 ## Qué es real y qué es simulado
@@ -118,7 +122,12 @@ En esta versión no construiremos:
 | Contenedores, operadores y placas | Sintéticos |
 | Congestión por hora del día | Simulada, ajustada al promedio del ITPAP |
 | Conexión con VUCEM, el SAT o los sistemas de citas de las terminales | No existe; se simula |
-| Mensajes de WhatsApp | Simulados dentro de la app |
+| Mensajes de WhatsApp con la agencia | Simulados dentro de la app: alguien del equipo escribe como la agencia |
+| Revisión de documentos e interpretación de mensajes | Reales: Gemini lee el PDF o la foto y el texto de la agencia |
+| Respuestas de respaldo | Si Gemini falla o se agota el límite gratuito, se usan reglas simples en su lugar; la pantalla dice "respuesta de respaldo" |
+| Documentos de prueba (PDF) | Sintéticos, marcados como documento de prueba |
+| Hora de la demo | Fija en 06:15 (`PORTIX_HORA_ACTUAL`) para que los colores salgan siempre igual |
+| Datos guardados | En memoria; "Reiniciar demo" o reiniciar el servidor los regresa al estado inicial |
 | Teléfonos de los operadores | Ficticios (`229 000 01xx`) |
 | SMS al operador (giro) | Envío real con Twilio al celular de un integrante del equipo; con la cuenta de prueba sale la plantilla de Twilio y el texto de PORTIX se muestra simulado (se indica en pantalla) |
 | Llamada de voz al operador (giro) | Simulada: la cuenta de prueba de Twilio no permite voz propia; se escucha en el navegador. El código para la llamada real existe (`avisos.py`) |
@@ -184,6 +193,9 @@ En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y co
 | 2026-11-11 | Claude Code + Gemini | Escribir y probar `ia.py`: revisión de documentos e interpretación de mensajes | Salida en JSON con esquema, límite de 15 s por intento, modelo alterno si el principal está saturado y respuestas de respaldo declaradas |
 | 2026-11-11 | Claude Code | Arquitectura y alcance para el punto de control 2 | Dejamos fuera las integraciones reales y el modelo predictivo; esas partes se simularán y lo declararemos |
 | 2026-11-11 | Claude Code | Estructura base (F0): FastAPI, Vite + React y contrato de la API | Frontend mínimo escrito a mano, sin el boilerplate de la plantilla. Vite reenvía `/api` al backend, así que no hace falta CORS |
+| 2026-11-11 | Claude Code + Gemini | Endpoint de revisión de documentos (F3) y prueba con PDFs sintéticos | Solo PDF, JPG o PNG de hasta 10 MB; el resultado de la IA actualiza el checklist y deja su resumen como nota |
+| 2026-11-12 | Claude Code | Regla del chat con la agencia (F4) | Regla estricta: si la agencia dice "ya quedó" pero falta el comprobante, el documento sigue pendiente hasta subirlo y que la IA lo revise |
+| 2026-11-12 | Claude Code | Despliegue en un solo servicio (`servidor.py` y `Dockerfile`) en Render | La API sirve también el frontend compilado: un solo enlace y sin CORS. Las keys van en variables de entorno del servicio |
 | 2026-11-12 | Claude Code | Giro del reto: avisos al operador por SMS y voz con Twilio | SMS de 160 caracteres o menos y sin acentos (GSM-7) con plantilla fija, no con IA, para que no falle; voz que deletrea el contenedor; real con Twilio o simulado y declarado |
 | 2026-11-12 | Claude Code + Twilio | Probar el envío real con la cuenta de prueba de Twilio | La cuenta de prueba rechaza texto propio y voz propia; usamos su plantilla para el SMS real y declaramos simulado el texto de PORTIX y la voz |
 
