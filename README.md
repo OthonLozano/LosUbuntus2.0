@@ -14,7 +14,7 @@ Hackathon Veracruz Tech Week 2026 · Reto 1: Puerto que fluye
 **Pruébalo en 3 pasos:**
 
 1. En **Panel**, elige un contenedor en rojo y cancela su cita: se suma un No Show evitado y se avisa al operador por SMS.
-2. En **Documentos**, sube una carta porte (PDF o foto) para que la IA la compare con el viaje.
+2. En **Documentos**, sube una carta porte (PDF o foto) para que la IA la compare con el viaje. En [docs/pruebas/](docs/pruebas/) hay dos documentos sintéticos del contenedor TCLU 930571-3: una carta porte con placas que no coinciden y un comprobante de pago del pedimento.
 3. En **Chat con la agencia**, escribe "ya quedó pagado, al rato te paso el comprobante".
 
 ## Problemática
