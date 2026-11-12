@@ -42,7 +42,7 @@
     "cita": "10:30",
     "operador": "J. Pérez",
     "placas": "47-BK-2D",
-    "salida_planeada": "10:45",
+    "salida_planeada": "10:25",
     "documentos": [
       {
         "tipo": "pedimento",
@@ -210,8 +210,8 @@
       },
       {
         "tipo": "requisito_carga",
-        "estado": "falta",
-        "nota": "Falta permiso de sobredimensión"
+        "estado": "ok",
+        "nota": "Permiso de sobredimensión vigente"
       }
     ]
   },
@@ -219,10 +219,10 @@
     "id": "TGHU 174826-8",
     "tipo_carga": "general",
     "terminal": "ICAVE",
-    "cita": "08:00",
+    "cita": "05:45",
     "operador": "S. Luna",
     "placas": "85-LM-5R",
-    "salida_planeada": "08:45",
+    "salida_planeada": "05:00",
     "documentos": [
       {
         "tipo": "pedimento",
@@ -258,7 +258,7 @@
     "cita": "09:30",
     "operador": "E. Soto",
     "placas": "19-NP-3T",
-    "salida_planeada": "10:15",
+    "salida_planeada": "08:30",
     "documentos": [
       {
         "tipo": "pedimento",
@@ -291,10 +291,10 @@
     "id": "BMOU 491738-7",
     "tipo_carga": "sobredimensionada",
     "terminal": "ICAVE",
-    "cita": "13:00",
+    "cita": "05:30",
     "operador": "H. Mora",
     "placas": "96-QR-6V",
-    "salida_planeada": "13:30",
+    "salida_planeada": "04:45",
     "documentos": [
       {
         "tipo": "pedimento",

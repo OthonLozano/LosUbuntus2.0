@@ -26,11 +26,19 @@ from modelos import (
     Congestion,
     Contenedor,
     ContenedorConSemaforo,
+    ContenedorNuevo,
+    Documento,
     Reprogramar,
     Resumen,
     SimularSalida,
 )
-from semaforo import a_hora, a_minutos, calcular_semaforo, ultima_salida_para_llegar_a
+from semaforo import (
+    a_hora,
+    a_minutos,
+    calcular_semaforo,
+    documentos_pendientes,
+    ultima_salida_para_llegar_a,
+)
 
 # Lee backend/.env (si existe) y deja sus valores en os.environ.
 # Así nadie escribe la API key en el código.
@@ -79,6 +87,12 @@ congestion = cargar_congestion()
 # igual que los contenedores: al reiniciar el backend vuelve a 0.
 no_show_evitados = 0
 CARGO_NO_SHOW_MXN = 999  # ICAVE, aviso ICA-2025-009
+
+# F5: espera promedio en el puerto de Veracruz en septiembre de 2026:
+# 3:49:30 = 3.825 h (ITPAP de T21, publicado el 30 oct. 2026). La usamos para
+# ESTIMAR cuántas horas de fila se evita un camión que no sale con documentos
+# incompletos. Es un promedio mensual, no una medición de cada camión.
+HORAS_ESPERA_PROMEDIO_ITPAP = 3.825
 
 
 # --- Reloj de la demo -----------------------------------------------------
@@ -153,6 +167,33 @@ def reiniciar():
 def listar_contenedores():
     """Todos los contenedores del día, cada uno con su color calculado."""
     return [con_semaforo(c) for c in contenedores.values()]
+
+
+# F5: agregar un contenedor. Se guarda en el mismo diccionario en memoria que
+# los demás. No usamos base de datos a propósito (está en "Fuera de alcance"):
+# para la demo es mejor que todo vuelva al estado inicial con /api/reiniciar.
+# En producción esto iría a PostgreSQL, con login por empresa.
+@app.post("/api/contenedores", response_model=ContenedorConSemaforo, status_code=201)
+def agregar_contenedor(nuevo: ContenedorNuevo):
+    """Agrega un contenedor con todos sus documentos pendientes."""
+    if nuevo.id in contenedores:
+        raise HTTPException(status_code=409, detail=f"Ya existe el contenedor '{nuevo.id}'")
+
+    # Todos los documentos empiezan en "falta": el despachador los marca en el
+    # checklist o los sube para que la IA los revise. La carga general no
+    # necesita requisito especial (permiso, hoja de seguridad), así que va en "na".
+    documentos = [
+        Documento(tipo=tipo, estado="falta")
+        for tipo in ("pedimento", "carta_porte", "folio_cita", "operador_placas")
+    ]
+    if nuevo.tipo_carga == "general":
+        documentos.append(Documento(tipo="requisito_carga", estado="na", nota="No aplica"))
+    else:
+        documentos.append(Documento(tipo="requisito_carga", estado="falta"))
+
+    contenedor = Contenedor(**nuevo.model_dump(), documentos=documentos)
+    contenedores[contenedor.id] = contenedor
+    return con_semaforo(contenedor)
 
 
 # Nota: el id lleva un espacio ("LTSU 402219-8"). En la URL llega como
@@ -292,16 +333,41 @@ def revisar_documento(
     }
 
 
+# F5 (opcional): la IA lee una carta porte para LLENAR el formulario de
+# "Agregar contenedor". No guarda nada; el despachador revisa y luego agrega.
+# `def` por la misma razón que revisar-documento (la llamada tarda unos segundos).
+@app.post("/api/extraer-viaje")
+def extraer_viaje(archivo: UploadFile = File(...)):
+    """Recibe un PDF o una foto de la carta porte y regresa los datos del viaje."""
+    if archivo.content_type not in TIPOS_ARCHIVO:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Tipo de archivo no permitido ({archivo.content_type}). Usa PDF, JPG o PNG.",
+        )
+    contenido = archivo.file.read()
+    if len(contenido) > TAMANO_MAXIMO_MB * 1024 * 1024:
+        raise HTTPException(status_code=413, detail=f"El archivo pasa de {TAMANO_MAXIMO_MB} MB.")
+    return ia.extraer_datos_viaje(contenido, archivo.content_type)
+
+
 @app.get("/api/resumen", response_model=Resumen)
 def resumen():
-    """Cuántos contenedores hay de cada color, y los No Show evitados."""
+    """Cuántos contenedores hay de cada color, los No Show evitados y las horas de fila evitadas."""
     conteo = {"verde": 0, "amarillo": 0, "rojo": 0}
+    detenidos = 0
     for c in contenedores.values():
         conteo[con_semaforo(c).color] += 1
+        # "Detenido": PORTIX no lo deja salir porque le falta algo. Sin el
+        # semáforo, ese camión iría al puerto y lo regresarían en el acceso
+        # después de hacer la fila.
+        if documentos_pendientes(c):
+            detenidos += 1
     return Resumen(
         **conteo,
         no_show_evitados=no_show_evitados,
         ahorro_mxn=no_show_evitados * CARGO_NO_SHOW_MXN,
+        detenidos_por_documentos=detenidos,
+        horas_espera_evitadas=round(detenidos * HORAS_ESPERA_PROMEDIO_ITPAP, 1),
     )
 
 
