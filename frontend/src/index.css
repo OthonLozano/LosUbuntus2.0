@@ -351,6 +351,31 @@ button:focus-visible, select:focus-visible {
 .simulacion__pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
 .simulacion__aviso { color: var(--texto-suave); font-size: 0.8125rem; }
 
+/* ---------- F3: revisar un documento con IA ---------- */
+.subir { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.subir__campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; width: 100%; }
+.subir__campo span { color: var(--texto-suave); }
+.subir__campo input[type='file'] { font: inherit; font-size: 0.875rem; max-width: 100%; }
+.subir__campo select { font: inherit; padding: 4px 6px; border: 1px solid var(--borde); border-radius: 6px; }
+.subir__espera { font-size: 0.875rem; color: var(--acento); font-weight: 500; }
+
+.revision {
+  border: 1px solid var(--borde);
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+}
+.revision--ok { border-left-color: var(--verde); }
+.revision--error { border-left-color: var(--rojo); }
+.revision__encabezado { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.revision__resumen { margin: 8px 0; }
+.revision__tabla { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 0.8125rem; }
+.revision__tabla th, .revision__tabla td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--borde); }
+.revision__tabla th { color: var(--texto-suave); font-weight: 600; }
+.revision__fila--mal td { color: var(--rojo); font-weight: 600; background: var(--rojo-fondo); }
+.revision__pie { margin: 8px 0 4px; }
+
 .detalle__exito {
   margin: 0 0 14px;
   padding: 10px 12px;

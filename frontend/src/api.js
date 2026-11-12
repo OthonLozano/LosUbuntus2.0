@@ -72,3 +72,18 @@ export async function reprogramar(id, accion, nuevaCita) {
   if (USAR_DATOS_FALSOS) return falsos.reprogramar(id, cuerpo)
   return pedir(`${urlContenedor(id)}/reprogramar`, enviarJson('POST', cuerpo))
 }
+
+// F3 · POST /api/contenedores/{id}/revisar-documento
+// Se manda como FormData (multipart/form-data), no como JSON, porque lleva un archivo.
+// - archivo: el File del <input type="file"> (PDF, JPG o PNG)
+// - documento (opcional): "carta_porte" o "pedimento"; si va vacío, la IA decide
+// Regresa { tipo_detectado, legible, hallazgos, estado_sugerido, resumen,
+//           respaldo, motivo_respaldo?, documento_actualizado, contenedor }
+export async function revisarDocumento(id, archivo, documento) {
+  if (USAR_DATOS_FALSOS) return falsos.revisarDocumento(id, archivo, documento)
+  const datos = new FormData()
+  datos.append('archivo', archivo)
+  if (documento) datos.append('documento', documento)
+  // Sin 'Content-Type' a mano: el navegador lo pone solo (con el "boundary" que separa los campos).
+  return pedir(`${urlContenedor(id)}/revisar-documento`, { method: 'POST', body: datos })
+}

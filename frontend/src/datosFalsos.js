@@ -271,3 +271,38 @@ export async function reprogramar(id, cuerpo) {
   if (antes.color === 'rojo' && aMinutos(HORA_DEMO) <= aMinutos(antes.ventana_fin)) noShowEvitados += 1
   return conColor(c)
 }
+
+// POST /api/contenedores/{id}/revisar-documento
+// NO lee el archivo: imita la respuesta de respaldo de backend/ia.py.
+// Si el nombre del archivo contiene "error", simula que las placas no coinciden.
+// Va marcada con respaldo: true para que la pantalla diga que no es una revisión real.
+export async function revisarDocumento(id, archivo, documento) {
+  await esperar(1500) // la revisión real tarda varios segundos
+  const c = buscar(id)
+  const conError = archivo.name.toLowerCase().includes('error')
+  const placasDoc = conError ? c.placas.split('').reverse().join('') : c.placas
+  const tipo = documento || 'carta_porte'
+  const resumen = conError
+    ? 'Respuesta de respaldo: las placas de la carta porte no coinciden con la unidad asignada.'
+    : 'Respuesta de respaldo: los datos del documento coinciden con el viaje.'
+
+  const renglon = c.documentos.find((d) => d.tipo === tipo)
+  if (!renglon) throw new Error(`El contenedor '${id}' no tiene el documento '${tipo}'`)
+  renglon.estado = conError ? 'error' : 'ok'
+  renglon.nota = `${resumen} (respuesta de respaldo)`
+
+  return {
+    tipo_detectado: 'carta_porte',
+    legible: true,
+    hallazgos: [
+      { campo: 'contenedor', valor_en_documento: c.id, valor_esperado: c.id, coincide: true },
+      { campo: 'placas', valor_en_documento: placasDoc, valor_esperado: c.placas, coincide: !conError },
+    ],
+    estado_sugerido: conError ? 'error' : 'ok',
+    resumen,
+    respaldo: true,
+    motivo_respaldo: 'Datos de prueba: el backend no está conectado',
+    documento_actualizado: tipo,
+    contenedor: conColor(c),
+  }
+}

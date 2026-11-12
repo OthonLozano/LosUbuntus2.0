@@ -99,6 +99,14 @@ export default function App() {
     }
   }
 
+  // F3: el backend ya actualizó el checklist al revisar el documento.
+  // Solo volvemos a pedir la lista y el resumen para que el color salga de su cálculo.
+  async function onDocumentoRevisado() {
+    setMensaje('')
+    setErrorGuardar('')
+    await cargar()
+  }
+
   const seleccionado = contenedores.find((c) => c.id === seleccionadoId)
   const horaSalida = seleccionado?.salida_planeada.slice(0, 2)
 
@@ -137,6 +145,7 @@ export default function App() {
               mensaje={mensaje}
               onCambiarDocumento={onCambiarDocumento}
               onReprogramar={onReprogramar}
+              onDocumentoRevisado={onDocumentoRevisado}
             />
           </main>
         </>

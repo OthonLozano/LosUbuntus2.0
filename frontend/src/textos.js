@@ -45,6 +45,24 @@ export const ESTADO_CITA = {
   cancelada: 'Cita cancelada',
 }
 
+// F3: nombres de los campos que compara la IA. Si llega uno que no está aquí,
+// se muestra tal como viene.
+export const CAMPOS_REVISION = {
+  contenedor: 'Contenedor',
+  placas: 'Placas',
+  operador: 'Operador',
+  terminal: 'Terminal',
+  tipo_carga: 'Tipo de carga',
+  cita: 'Cita',
+}
+
+// F3: tipos de documento que reconoce la IA.
+export const TIPOS_DOCUMENTO = {
+  carta_porte: 'Carta porte',
+  pedimento: 'Pedimento',
+  otro: 'Otro documento',
+}
+
 // Cargo por No Show en ICAVE (aviso ICA-2025-009).
 export const CARGO_NO_SHOW = 999
 
