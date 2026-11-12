@@ -220,6 +220,7 @@ Reglas:
 - Si dicen que algo falta, sigue pendiente o tiene un problema -> "falta" o "error".
 - Si el mensaje no cambia nada (saludos, preguntas) -> documento "ninguno", "sin_cambio".
 - Si prometen mandar algo después (un comprobante), ponlo en "pendiente".
+- Si no queda nada pendiente, deja "pendiente" como texto vacío "".
 - Si el mensaje es ambiguo, usa confianza "baja" y no cambies el estado.
 - resumen: empieza con "La IA entendió:" y es una sola frase en español."""
 
@@ -243,7 +244,11 @@ def interpretar_mensaje(texto: str, contenedor: dict) -> dict:
     )
     try:
         resultado = _pedir_json([pregunta], InterpretacionMensaje, INSTRUCCIONES_MENSAJE)
-        return {**resultado.model_dump(), "respaldo": False}
+        datos = resultado.model_dump()
+        # A veces el modelo escribe "ninguno" en vez de dejar el campo vacío.
+        if datos["pendiente"].strip().lower() in ("ninguno", "ninguna", "nada", "n/a", "na"):
+            datos["pendiente"] = ""
+        return {**datos, "respaldo": False}
     except Exception as error:
         return _respaldo_mensaje(texto, pendientes, error)
 

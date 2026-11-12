@@ -89,6 +89,7 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
 | `POST /api/contenedores/{id}/simular-salida` | Recalcular con otra hora de salida | F2 |
 | `POST /api/contenedores/{id}/reprogramar` | Mover o cancelar la cita (suma al contador) | F2 |
 | `POST /api/contenedores/{id}/revisar-documento` | Subir un PDF o una foto para que la IA lo revise | F3 |
+| `GET /api/contenedores/{id}/chat` | Historial del chat con la agencia | F4 |
 | `POST /api/contenedores/{id}/chat` | Mensaje de la agencia; la IA lo interpreta | F4 |
 
 Nota: el `id` lleva un espacio (`LTSU 402219-8`). En el frontend hay que codificarlo con `encodeURIComponent(id)` al armar la URL.
@@ -177,21 +178,52 @@ No hay que poner `Content-Type` a mano: el navegador lo pone solo con `FormData`
 - Tarda unos 4 a 8 segundos (es la llamada a Gemini): el frontend debe mostrar un "Revisando…" mientras tanto.
 - Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo". En ese caso viene además `motivo_respaldo`.
 
-**`POST /api/contenedores/{id}/chat`**
+**`GET /api/contenedores/{id}/chat`** (implementado): el historial del chat con la agencia. Si el chat es nuevo, empieza con un aviso de PORTIX que lista los documentos pendientes.
+
+```json
+{
+  "mensajes": [
+    { "de": "portix", "texto": "Aviso de PORTIX sobre el contenedor LTSU 402219-9 (cita 09:00): falta resolver pedimento (Pago pendiente). ¿Nos confirman cuando quede?", "hora": "06:15" }
+  ]
+}
+```
+
+`de` puede ser `portix` (avisos y respuestas del sistema) o `agencia`. La `hora` es la del reloj de la demo.
+
+**`POST /api/contenedores/{id}/chat`** (implementado): lo que escribe la agencia. El texto no puede ir vacío y tiene máximo 500 caracteres (`422`).
 
 ```json
 { "texto": "Ya quedó pagado el pedimento" }
 ```
 
-Regresa:
+Regresa (la `interpretacion` es tal cual la da `ia.interpretar_mensaje()`):
 
 ```json
 {
-  "interpretacion": { "documento": "pedimento", "estado_nuevo": "ok", "resumen": "La agencia confirma el pago del pedimento" },
+  "interpretacion": {
+    "documento": "pedimento",
+    "nuevo_estado": "ok",
+    "pendiente": "",
+    "resumen": "La IA entendió: la agencia confirma el pago del pedimento.",
+    "confianza": "alta",
+    "respaldo": false
+  },
   "respaldo": false,
-  "contenedor": { "...": "el contenedor con su color recalculado" }
+  "documento_actualizado": "pedimento",
+  "contenedor": { "...": "el contenedor con su color recalculado" },
+  "mensajes": [
+    { "de": "portix", "texto": "Aviso de PORTIX sobre el contenedor ...", "hora": "06:15" },
+    { "de": "agencia", "texto": "Ya quedó pagado el pedimento", "hora": "06:15" },
+    { "de": "portix", "texto": "La IA entendió: ... Pedimento queda como 'listo'. El contenedor está en verde (sale).", "hora": "06:15" }
+  ]
 }
 ```
+
+- `documento` puede ser uno de los 5 tipos o `ninguno`. `nuevo_estado` puede ser `ok`, `falta`, `error` o `sin_cambio`. `confianza` puede ser `alta`, `media` o `baja`.
+- El checklist solo cambia si hay documento, el estado no es `sin_cambio` y la confianza no es `baja`. Si no cambia, `documento_actualizado` llega en `null`.
+- `mensajes` es el historial completo, para pintarlo sin pedir otra vez el GET.
+- Tarda unos segundos (la llamada a Gemini): el frontend debe mostrar un "Interpretando…" mientras tanto.
+- Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo". En ese caso viene además `interpretacion.motivo_respaldo`.
 
 ## Respuestas de respaldo
 
@@ -203,6 +235,6 @@ Se usan los códigos de FastAPI: `404` si el contenedor no existe (o, en el PATC
 
 ## Notas del backend
 
-- Los cambios hechos con el PATCH y con `reprogramar`, y el contador de No Show, se guardan en memoria, no en `contenedores.json`. Al reiniciar el backend, todo vuelve al estado inicial, así la demo siempre sale igual.
+- Los cambios hechos con el PATCH, con `reprogramar` y con el chat, el contador de No Show y los mensajes se guardan en memoria, no en `contenedores.json`. Al reiniciar el backend, todo vuelve al estado inicial, así la demo siempre sale igual.
 - En el PATCH, `nota` es opcional; si no se manda, la nota anterior se borra.
 - La "hora actual" de la demo se configura con `PORTIX_HORA_ACTUAL` en `backend/.env` (por defecto `06:15`).

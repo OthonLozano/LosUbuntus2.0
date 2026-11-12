@@ -112,3 +112,25 @@ class Resumen(BaseModel):
     # Los suma POST /reprogramar cuando se mueve o cancela a tiempo una cita en rojo.
     no_show_evitados: int
     ahorro_mxn: int
+
+
+# --- F4: chat simulado con la agencia aduanal -----------------------------
+# Va al final del archivo para no chocar con los cambios de F3 al integrar.
+# La forma de la interpretación de la IA la define ia.py (InterpretacionMensaje).
+
+
+class MensajeAgencia(BaseModel):
+    """Cuerpo de POST /api/contenedores/{id}/chat: lo que escribe la agencia.
+
+    El límite de 500 caracteres evita que alguien pegue un documento entero.
+    """
+
+    texto: str = Field(min_length=1, max_length=500)
+
+
+class Mensaje(BaseModel):
+    """Un mensaje del chat. 'portix' son los avisos y respuestas del sistema."""
+
+    de: Literal["portix", "agencia"]
+    texto: str
+    hora: str
