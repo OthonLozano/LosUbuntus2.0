@@ -161,4 +161,10 @@ Si Gemini falla o se agota el límite gratuito, `ia.py` regresa una respuesta de
 
 ## Errores
 
-Se usan los códigos de FastAPI: `404` si el contenedor no existe y `422` si el cuerpo no tiene la forma esperada. El detalle va en `{"detail": "..."}`.
+Se usan los códigos de FastAPI: `404` si el contenedor no existe (o, en el PATCH, si no tiene ese documento) y `422` si el cuerpo no tiene la forma esperada. El detalle va en `{"detail": "..."}`.
+
+## Notas del backend (F1)
+
+- Los cambios hechos con el PATCH se guardan en memoria, no en `contenedores.json`. Al reiniciar el backend, todo vuelve al estado inicial, así la demo siempre sale igual.
+- En el PATCH, `nota` es opcional; si no se manda, la nota anterior se borra.
+- La "hora actual" de la demo se configura con `PORTIX_HORA_ACTUAL` en `backend/.env` (por defecto `06:15`).
