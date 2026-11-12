@@ -4,6 +4,19 @@ Semáforo de salida para transportistas del puerto de Veracruz: indica qué cami
 
 Hackathon Veracruz Tech Week 2026 · Reto 1: Puerto que fluye
 
+**Demo en vivo: https://losubuntus2-0.onrender.com/**
+
+- La primera carga puede tardar hasta 1 minuto: el servidor gratuito de Render se duerme cuando no se usa.
+- La hora de la demo es fija (06:15) para que los colores siempre salgan igual.
+- Los cambios viven en memoria y los ve cualquiera que abra el link. El botón **"Reiniciar demo"** regresa todo al estado inicial.
+- Si Gemini no responde, la app usa respuestas de respaldo y lo indica en pantalla. Lo simulado está etiquetado.
+
+**Pruébalo en 3 pasos:**
+
+1. En **Panel**, elige un contenedor en rojo y cancela su cita: se suma un No Show evitado y se avisa al operador por SMS.
+2. En **Documentos**, sube una carta porte (PDF o foto) para que la IA la compare con el viaje.
+3. En **Chat con la agencia**, escribe "ya quedó pagado, al rato te paso el comprobante".
+
 ## Problemática
 
 Cada día entran al puerto de Veracruz cerca de 2,000 tractocamiones. En septiembre de 2026, un camión pasó en promedio **12 h 38 min** dentro del puerto. Fue el peor tiempo de los cuatro grandes puertos del país y el doble que en junio (6 h 15 min).
@@ -68,7 +81,7 @@ Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noch
 - **IA:** API de Gemini (plan gratuito de Google AI Studio), aislada en un solo módulo del backend (`ia.py`). Así podemos cambiar de proveedor sin tocar el resto del código, por ejemplo si conseguimos acceso a Sintergica. Si se agota el límite gratuito, la demo usa respuestas de respaldo, que se indican en pantalla como tales.
 - **Avisos:** chat simulado dentro de la app.
 - **Desarrollo:** asistido con Claude Code.
-- **Despliegue:** por definir.
+- **Despliegue:** Render, con el `Dockerfile` de la raíz: un solo servicio sirve la API y el frontend. En línea en https://losubuntus2-0.onrender.com/
 
 ## Arquitectura (planeada)
 
