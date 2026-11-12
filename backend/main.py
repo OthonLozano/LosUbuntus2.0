@@ -379,16 +379,22 @@ def chat(id: str, cuerpo: MensajeAgencia):
     actualizado = con_semaforo(contenedor)
 
     # PORTIX contesta en el chat: qué entendió la IA y qué cambió.
-    if renglon:
+    nombre = NOMBRES_DOCUMENTO[renglon.tipo].capitalize() if renglon else ""
+    color = TEXTO_COLOR[actualizado.color]
+    if renglon and renglon.estado == "falta" and interpretacion["pendiente"]:
+        # Caso de la regla estricta: confirmaron, pero falta que manden algo.
         efecto = (
-            f"{NOMBRES_DOCUMENTO[renglon.tipo].capitalize()} queda como "
-            f"'{TEXTO_ESTADO[renglon.estado]}'. El contenedor está en "
-            f"{TEXTO_COLOR[actualizado.color]}."
+            f"{nombre} sigue pendiente hasta recibir: {interpretacion['pendiente']}. "
+            f"El contenedor está en {color}."
         )
+    elif renglon:
+        efecto = f"{nombre} queda como '{TEXTO_ESTADO[renglon.estado]}'. El contenedor está en {color}."
+        if interpretacion["pendiente"]:
+            efecto += f" Pendiente: {interpretacion['pendiente']}."
     else:
         efecto = "No cambió ningún documento; si hace falta, ajústalo a mano en el checklist."
-    if interpretacion["pendiente"]:
-        efecto += f" Pendiente: {interpretacion['pendiente']}."
+        if interpretacion["pendiente"]:
+            efecto += f" Pendiente: {interpretacion['pendiente']}."
     respuesta = f"{interpretacion['resumen']} {efecto}"
     # El resumen del respaldo ya empieza con "Respuesta de respaldo:", pero lo
     # aseguramos por si cambia el texto en ia.py.
