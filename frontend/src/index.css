@@ -470,3 +470,245 @@ button:focus-visible, select:focus-visible {
 @media (max-width: 560px) {
   .congestion__barras { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* ===================== F5: vistas con pestañas ===================== */
+/* Pensado para que quepa en una laptop de 1366x768 sin mucho scroll. */
+
+.app { padding: 16px 24px; }
+
+/* Resumen: se acomoda solo si Othon agrega más tarjetas (por ejemplo, horas evitadas). */
+.resumen { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 12px; }
+.resumen__tarjeta { padding: 10px 16px; }
+.resumen__numero { font-size: 1.75rem; }
+
+/* Gráfica de congestión un poco más baja en el Panel */
+.congestion { padding: 10px 16px; margin-bottom: 12px; }
+.congestion__area { height: 40px; }
+
+/* ---------- Encabezado ---------- */
+.encabezado { align-items: center; margin-bottom: 12px; }
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca__semaforo {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 4px;
+  background: #1f2328;
+  border-radius: 7px;
+}
+.marca__luz { width: 11px; height: 11px; border-radius: 50%; }
+.marca__luz--rojo { background: #e5534b; }
+.marca__luz--amarillo { background: #e3b341; }
+.marca__luz--verde { background: #46c35a; }
+.encabezado__estado { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  font-size: 0.8125rem;
+  color: var(--texto);
+}
+.chip--ok { color: var(--verde); border-color: var(--verde); background: var(--verde-fondo); }
+.chip--respaldo { color: var(--amarillo); border-color: var(--amarillo-punto); background: var(--amarillo-fondo); }
+.chip--aviso { border-style: dashed; color: var(--texto-suave); }
+
+/* ---------- Pestañas ---------- */
+.pestanas {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--borde);
+  margin-bottom: 14px;
+}
+.pestana {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.pestana:hover { color: var(--texto); }
+.pestana[aria-selected="true"] { color: var(--acento); border-bottom-color: var(--acento); }
+.pestana:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+.pestana__contador {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--rojo);
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* ---------- Panel ---------- */
+.barra-lista { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.barra-lista h2 { font-size: 1rem; }
+/* El detalle se queda fijo al bajar y, si es más alto que la pantalla, tiene su propio scroll. */
+.detalle { max-height: calc(100vh - 32px); overflow-y: auto; }
+.detalle__atajos { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+
+/* ---------- Vistas Documentos y Chat: lista a la izquierda, contenido a la derecha ---------- */
+.vista-dividida {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 16px;
+  height: calc(100vh - 190px);
+  min-height: 460px;
+}
+.vista-dividida > * {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.vista-dividida__principal { padding: 16px 18px; }
+.vista-vacia { color: var(--texto-suave); text-align: center; margin-top: 60px; }
+
+.compacta { padding: 10px; }
+.compacta__titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-suave);
+  margin: 6px 4px;
+}
+.compacta__cuenta { background: var(--fondo); border-radius: 999px; padding: 0 7px; }
+.compacta__lista { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.compacta__item {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.compacta__item:hover { background: #f6f8fa; }
+.compacta__item--activo, .compacta__item--activo:hover {
+  background: #eaf2fc;
+  border-color: var(--acento);
+}
+.compacta__fila { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.compacta__id { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-weight: 600; font-size: 0.875rem; }
+.compacta__detalle { font-size: 0.8125rem; color: var(--texto-suave); }
+.compacta .semaforo { font-size: 0.75rem; padding: 2px 8px; }
+
+.contenedor-elegido { margin-bottom: 12px; }
+.contenedor-elegido .detalle__motivo { margin-bottom: 6px; padding: 8px 12px; }
+.contenedor-elegido__datos { margin: 0; font-size: 0.8125rem; color: var(--texto-suave); }
+
+/* Documentos: checklist y revisión lado a lado */
+.docs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.docs h3 { font-size: 1rem; margin-bottom: 8px; }
+.docs .bloque { border-top: none; padding-top: 0; }
+
+/* Marcas de la tabla de hallazgos: color + símbolo + palabra */
+.revision__tabla { font-size: 0.875rem; }
+.revision__tabla td, .revision__tabla th { padding: 6px 8px; }
+.coincide { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+.coincide--si { color: var(--verde); background: var(--verde-fondo); }
+.coincide--no { color: var(--rojo); background: var(--superficie); border: 1px solid var(--rojo); }
+
+/* Antes -> después del color del contenedor */
+.antes-despues { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 8px 0; font-size: 0.875rem; }
+.antes-despues--cambio { font-weight: 600; }
+
+/* ---------- Chat como bandeja de mensajes ---------- */
+.vista-chat { display: flex; flex-direction: column; }
+.chat-agencia { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
+.chat-agencia__encabezado h3 { font-size: 1rem; margin-bottom: 2px; }
+.chat-agencia__encabezado .bloque__texto { margin: 0; font-size: 0.8125rem; color: var(--texto-suave); }
+/* En la vista Chat, los mensajes ocupan todo el alto que sobre. */
+.vista-chat .chat { flex: 1; min-height: 120px; max-height: none; margin: 0; }
+.chat__escribiendo { align-self: flex-start; font-size: 0.8125rem; color: var(--acento); font-style: italic; }
+.chat__forma { margin: 0; align-items: stretch; }
+.chat__escribir { display: flex; gap: 8px; align-items: flex-end; }
+.chat__escribir textarea { flex: 1; }
+.revision--chat { padding: 8px 12px; }
+.revision--chat .revision__resumen { margin: 4px 0; }
+.revision--chat .revision__pie { margin: 4px 0; }
+.datos--cuatro { grid-template-columns: repeat(4, 1fr); gap: 4px 12px; margin: 4px 0; }
+
+/* ---------- Ventana para agregar contenedor ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 35, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10;
+}
+.modal__caja {
+  background: var(--superficie);
+  border-radius: 10px;
+  padding: 18px 20px;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+/* La caja es "relative" para poder poner la X en la esquina. */
+.modal__caja { position: relative; }
+/* El formulario de Othon trae su propia caja con borde; dentro de la ventana se
+   la quitamos para que no se vea una caja dentro de otra. */
+.modal__caja .formulario { border: none; padding: 0; max-width: none; }
+.modal__cerrar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 1.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 0 4px;
+}
+
+/* ---------- Parpadeo cuando un contenedor cambia de color ---------- */
+/* Dos destellos de 0.5 s con el color nuevo (1 s en total). */
+@keyframes destello-verde { 50% { background-color: var(--verde-fondo); box-shadow: inset 4px 0 0 var(--verde); } }
+@keyframes destello-amarillo { 50% { background-color: var(--amarillo-fondo); box-shadow: inset 4px 0 0 var(--amarillo-punto); } }
+@keyframes destello-rojo { 50% { background-color: var(--rojo-fondo); box-shadow: inset 4px 0 0 var(--rojo); } }
+.cambio--verde { animation: destello-verde 0.5s ease-in-out 2; }
+.cambio--amarillo { animation: destello-amarillo 0.5s ease-in-out 2; }
+.cambio--rojo { animation: destello-rojo 0.5s ease-in-out 2; }
+/* Si la persona pidió menos movimiento en su sistema, solo marcamos el borde sin parpadear. */
+@media (prefers-reduced-motion: reduce) {
+  .cambio--verde, .cambio--amarillo, .cambio--rojo { animation: none; outline: 2px solid var(--acento); }
+}
+
+/* ---------- Pantallas angostas (tablet vertical) ---------- */
+@media (max-width: 960px) {
+  .vista-dividida { grid-template-columns: 1fr; height: auto; }
+  .compacta { max-height: 260px; }
+  .docs { grid-template-columns: 1fr; }
+  .vista-chat .chat { min-height: 300px; }
+  .detalle { max-height: none; }
+  .datos--cuatro { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .app { padding: 12px; }
+  .pestana { padding: 8px 10px; font-size: 0.875rem; }
+}
