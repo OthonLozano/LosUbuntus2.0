@@ -1,0 +1,50 @@
+[
+  {
+    "id": "LTSU 402219-8",
+    "tipo_carga": "general",
+    "terminal": "ICAVE",
+    "cita": "11:00",
+    "operador": "L. Ramírez",
+    "placas": "52-AM-9F",
+    "salida_planeada": "10:30",
+    "documentos": [
+      { "tipo": "pedimento", "estado": "ok", "nota": "Confirmado por la agencia 05:30" },
+      { "tipo": "carta_porte", "estado": "error", "nota": "Placas no coinciden" },
+      { "tipo": "folio_cita", "estado": "ok", "nota": "" },
+      { "tipo": "operador_placas", "estado": "ok", "nota": "" },
+      { "tipo": "requisito_carga", "estado": "na", "nota": "No aplica" }
+    ]
+  },
+  {
+    "id": "PTXU 100002-3",
+    "tipo_carga": "imo",
+    "terminal": "CICE",
+    "cita": "09:00",
+    "operador": "J. Pérez",
+    "placas": "31-BK-4C",
+    "salida_planeada": "08:00",
+    "documentos": [
+      { "tipo": "pedimento", "estado": "ok", "nota": "" },
+      { "tipo": "carta_porte", "estado": "ok", "nota": "" },
+      { "tipo": "folio_cita", "estado": "ok", "nota": "" },
+      { "tipo": "operador_placas", "estado": "ok", "nota": "" },
+      { "tipo": "requisito_carga", "estado": "ok", "nota": "Hoja de seguridad de carga peligrosa" }
+    ]
+  },
+  {
+    "id": "PTXU 100003-7",
+    "tipo_carga": "isotanque",
+    "terminal": "ICAVE",
+    "cita": "08:00",
+    "operador": "M. Torres",
+    "placas": "47-CD-2H",
+    "salida_planeada": "08:30",
+    "documentos": [
+      { "tipo": "pedimento", "estado": "ok", "nota": "" },
+      { "tipo": "carta_porte", "estado": "ok", "nota": "" },
+      { "tipo": "folio_cita", "estado": "ok", "nota": "" },
+      { "tipo": "operador_placas", "estado": "ok", "nota": "" },
+      { "tipo": "requisito_carga", "estado": "ok", "nota": "Certificado de limpieza del isotanque" }
+    ]
+  }
+]
