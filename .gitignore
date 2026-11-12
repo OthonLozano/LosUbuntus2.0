@@ -1,0 +1,24 @@
+# Notas personales de Claude Code y plan interno del equipo
+CLAUDE.local.md
+PLAN-EQUIPO.md
+PLAN-EQUIPO.pdf
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / Vite
+node_modules/
+dist/
+
+# Editor y sistema
+.vscode/
+.DS_Store
+Thumbs.db

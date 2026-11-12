@@ -51,7 +51,7 @@ Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noch
 - **Frontend:** React con Vite.
 - **Backend:** FastAPI (Python).
 - **Datos:** archivos JSON sintéticos en el repositorio.
-- **IA:** API de Claude, aislada en un solo módulo del backend (`ia.py`). Así podemos cambiar de proveedor sin tocar el resto del código, por ejemplo si conseguimos acceso a Sintergica.
+- **IA:** API de Gemini (plan gratuito de Google AI Studio), aislada en un solo módulo del backend (`ia.py`). Así podemos cambiar de proveedor sin tocar el resto del código, por ejemplo si conseguimos acceso a Sintergica. Si se agota el límite gratuito, la demo usa respuestas de respaldo, que se indican en pantalla como tales.
 - **Avisos:** chat simulado dentro de la app.
 - **Desarrollo:** asistido con Claude Code.
 - **Despliegue:** por definir.
@@ -81,6 +81,8 @@ Pendiente.
 | 2026-11-11 | Claude Code | Proponer y comparar combinaciones de solución | Semáforo de salida construido por fases, cada una con demo funcional |
 | 2026-11-11 | Claude Code | Mockup del tablero y del aviso a la agencia | Referencia visual para el equipo |
 | 2026-11-11 | Claude Code | Borrador de este README | Revisado y ajustado por el equipo |
+| 2026-11-11 | Claude Code + búsqueda web | Comparar APIs de IA gratuitas (Grok, Gemini, Groq) | Gemini: tiene plan gratuito y lee imágenes y PDFs. Groq queda como respaldo para texto |
+| 2026-11-11 | Claude Code | Plan de trabajo del equipo: roles, ramas, turnos y prompts iniciales | Cinco roles según la herramienta de cada integrante. Cada fase cierra con merge y etiqueta |
 
 ## Fuentes
 
