@@ -132,6 +132,7 @@ El contrato entre el frontend y el backend está en [docs/contrato-api.md](docs/
 | 2026-11-11 | Claude Code | Borrador de este README | Revisado y ajustado por el equipo |
 | 2026-11-11 | Claude Code + búsqueda web | Comparar APIs de IA gratuitas (Grok, Gemini, Groq) | Gemini: tiene plan gratuito y lee imágenes y PDFs. Groq queda como respaldo para texto |
 | 2026-11-11 | Claude Code | Plan de trabajo del equipo: roles, ramas, turnos y prompts iniciales | Cinco roles según la herramienta de cada integrante. Cada fase cierra con merge y etiqueta |
+| 2026-11-11 | Claude Code + Gemini | Escribir y probar `ia.py`: revisión de documentos e interpretación de mensajes | Salida en JSON con esquema, límite de 15 s por intento, modelo alterno si el principal está saturado y respuestas de respaldo declaradas |
 | 2026-11-11 | Claude Code | Arquitectura y alcance para el punto de control 2 | Dejamos fuera las integraciones reales y el modelo predictivo; esas partes se simularán y lo declararemos |
 | 2026-11-11 | Claude Code | Estructura base (F0): FastAPI, Vite + React y contrato de la API | Frontend mínimo escrito a mano, sin el boilerplate de la plantilla. Vite reenvía `/api` al backend, así que no hace falta CORS |
 
