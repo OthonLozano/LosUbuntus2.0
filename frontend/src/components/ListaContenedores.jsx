@@ -1,5 +1,5 @@
 import Semaforo from './Semaforo.jsx'
-import { DOCUMENTOS, ESTADOS_DOC, TIPOS_CARGA } from '../textos.js'
+import { DOCUMENTOS, ESTADO_CITA, ESTADOS_DOC, TIPOS_CARGA } from '../textos.js'
 
 // Texto corto de documentos: "4 de 4 listos" o lo que está pendiente.
 function resumenDocumentos(documentos) {
@@ -60,6 +60,9 @@ export default function ListaContenedores({ contenedores, seleccionadoId, onSele
                   <div className="tabla__secundario">
                     Sale {c.salida_planeada} · llega {c.llegada_estimada}
                   </div>
+                  {c.estado_cita && c.estado_cita !== 'activa' && (
+                    <div className="tabla__cita-estado">{ESTADO_CITA[c.estado_cita]}</div>
+                  )}
                 </td>
                 <td>
                   <div>{docs.conteo}</div>

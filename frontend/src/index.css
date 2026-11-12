@@ -245,3 +245,166 @@ button:focus-visible, select:focus-visible {
   outline: 2px solid var(--acento);
   outline-offset: 2px;
 }
+
+/* ===================== F2 ===================== */
+
+.resumen { grid-template-columns: repeat(4, 1fr); }
+.resumen__tarjeta--noshow { border-left-color: var(--acento); }
+.resumen__tarjeta--noshow .resumen__texto { color: var(--acento); }
+.resumen__bloque { display: flex; flex-direction: column; }
+.resumen__ahorro { font-size: 0.875rem; color: var(--texto-suave); }
+
+/* Etiquetas de "simulada" y "prueba": lo simulado siempre se declara */
+.etiqueta-simulada, .etiqueta-prueba {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px dashed var(--texto-suave);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-suave);
+  background: var(--superficie);
+}
+.etiqueta-prueba { margin-left: 8px; text-transform: none; letter-spacing: 0; vertical-align: middle; }
+
+/* ---------- Gráfica de congestión ---------- */
+.congestion {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.congestion__encabezado { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.congestion__encabezado h2 { font-size: 1rem; }
+.congestion__barras {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+}
+.congestion__columna {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  border-radius: 6px;
+}
+.congestion__columna--resaltada { background: #eaf2fc; box-shadow: inset 0 0 0 2px var(--acento); }
+.congestion__area { width: 100%; height: 56px; display: flex; align-items: flex-end; justify-content: center; }
+.congestion__barra { width: 70%; max-width: 36px; border-radius: 4px 4px 0 0; }
+.congestion__barra--baja { background: #9fc7ec; }
+.congestion__barra--media { background: #4a8fd4; }
+.congestion__barra--alta { background: #0b4f94; }
+.congestion__nivel { font-size: 0.75rem; font-weight: 600; }
+.congestion__hora { font-size: 0.75rem; color: var(--texto-suave); }
+.congestion__nota { margin: 10px 0 0; font-size: 0.8125rem; color: var(--texto-suave); }
+
+/* ---------- Bloques del panel ---------- */
+.bloque {
+  border-top: 1px solid var(--borde);
+  padding-top: 12px;
+  margin-bottom: 16px;
+}
+.bloque h3 { font-size: 0.9375rem; margin-bottom: 8px; }
+.bloque--alerta {
+  border: 1px solid var(--rojo);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffafa;
+}
+.bloque__texto { margin: 0 0 10px; font-size: 0.9rem; }
+.fila-control { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.fila-control label { font-size: 0.875rem; color: var(--texto-suave); }
+.fila-control input[type='time'] {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+}
+.boton {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--acento);
+  background: var(--acento);
+  color: #fff;
+  cursor: pointer;
+}
+.boton:disabled { opacity: 0.55; cursor: not-allowed; }
+.boton--secundario { background: var(--superficie); color: var(--acento); }
+.boton--peligro { background: var(--superficie); color: var(--rojo); border-color: var(--rojo); }
+.boton:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.simulacion {
+  border: 1px dashed var(--texto-suave);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+}
+.simulacion p { margin: 6px 0 0; }
+.simulacion__fila { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.simulacion__pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+.simulacion__aviso { color: var(--texto-suave); font-size: 0.8125rem; }
+
+.detalle__exito {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #ddf4ff;
+  border: 1px solid var(--acento);
+  font-weight: 500;
+}
+.detalle__cita-estado, .tabla__cita-estado {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--acento);
+  margin: 0 0 8px;
+}
+.tabla__cita-estado { margin: 4px 0 0; }
+
+/* ---------- Barra de la ventana ---------- */
+.ventana__pista {
+  position: relative;
+  height: 14px;
+  background: #eef1f4;
+  border-radius: 7px;
+  margin: 6px 0 2px;
+}
+.ventana__rango {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--verde-fondo);
+  border: 1px solid var(--verde);
+  border-radius: 7px;
+}
+.ventana__llegada {
+  position: absolute;
+  top: -5px;
+  width: 4px;
+  height: 24px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--texto);
+}
+.ventana__llegada--despues { background: var(--rojo); }
+.ventana__llegada--antes { background: var(--amarillo-punto); }
+.ventana__marcas { position: relative; height: 18px; font-size: 0.75rem; color: var(--texto-suave); }
+.ventana__marcas span { position: absolute; transform: translateX(-50%); }
+.ventana__texto { margin: 4px 0 0; font-size: 0.875rem; font-weight: 500; }
+.ventana__texto--despues { color: var(--rojo); }
+.ventana__texto--antes { color: var(--amarillo); }
+.ventana__texto--dentro { color: var(--verde); }
+
+@media (max-width: 960px) {
+  .resumen { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .congestion__barras { grid-template-columns: repeat(6, 1fr); }
+}
