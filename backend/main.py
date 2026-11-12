@@ -18,6 +18,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
+import avisos
 import ia
 
 from modelos import (
@@ -26,8 +27,10 @@ from modelos import (
     Congestion,
     Contenedor,
     ContenedorConSemaforo,
+    Aviso,
     ContenedorNuevo,
     Documento,
+    PedirAviso,
     Reprogramar,
     Resumen,
     SimularSalida,
@@ -139,6 +142,10 @@ def salud():
         "modelo": os.getenv("GEMINI_MODEL") or None,
         # F5: el frontend la muestra en el encabezado ("Hora de la demo").
         "hora_actual": hora_actual(),
+        # Giro: si los SMS y llamadas salen de verdad (Twilio) o son simulados.
+        "sms_real": avisos.sms_real_configurado(),
+        # "real", "plantilla" (cuenta de prueba de Twilio) o "simulado".
+        "sms_modo": avisos.modo(),
     }
 
 
@@ -160,6 +167,7 @@ def reiniciar():
     # clear() en vez de reasignarlo: así no hace falta `global` y cualquier
     # referencia al mismo diccionario ve el cambio.
     conversaciones.clear()
+    avisos_enviados.clear()  # giro: igual que los chats (se define más abajo)
     return {"ok": True, "hora_actual": hora_actual()}
 
 
@@ -219,6 +227,44 @@ def cambiar_documento(id: str, cambio: CambioDocumento):
     )
 
 
+# --- Giro del reto: avisos al operador por SMS o voz -------------------------
+# El operador no tiene smartphone: le avisamos por SMS o llamada (avisos.py).
+# El historial vive en memoria, como los chats: /api/reiniciar lo borra.
+
+avisos_enviados: dict[str, list[Aviso]] = {}
+
+
+def avisar(contenedor: Contenedor, canal: str, motivo: str) -> Aviso:
+    """Manda el aviso (real o simulado) y lo guarda en el historial del contenedor."""
+    resultado = avisos.enviar(canal, con_semaforo(contenedor).model_dump())
+    aviso = Aviso(**resultado, hora=hora_actual(), motivo=motivo)
+    avisos_enviados.setdefault(contenedor.id, []).append(aviso)
+    return aviso
+
+
+@app.get("/api/contenedores/{id}/avisos")
+def ver_avisos(id: str):
+    """Historial de avisos al operador y cómo se vería el aviso de ahora."""
+    contenedor = con_semaforo(buscar(id)).model_dump()
+    return {
+        "avisos": avisos_enviados.get(id, []),
+        "vista_previa": {
+            "sms": avisos.mensaje_sms(contenedor),
+            "voz": avisos.texto_voz(contenedor),
+        },
+        "sms_real": avisos.sms_real_configurado(),
+        "sms_modo": avisos.modo(),
+    }
+
+
+# `def` (no `async def`): la llamada a Twilio tarda un poco y así no congela
+# las demás peticiones (igual que con Gemini).
+@app.post("/api/contenedores/{id}/avisar-operador", response_model=Aviso)
+def avisar_operador(id: str, cuerpo: PedirAviso):
+    """Manda al operador el color de su contenedor por SMS o por llamada de voz."""
+    return avisar(buscar(id), cuerpo.canal, motivo="manual")
+
+
 @app.get("/api/congestion", response_model=Congestion)
 def ver_congestion():
     """La tabla de congestión por hora. Es SIMULADA y así lo indica."""
@@ -272,7 +318,11 @@ def reprogramar(id: str, cuerpo: Reprogramar):
     if antes.color == "rojo" and a_minutos(hora_actual()) <= a_minutos(antes.ventana_fin):
         no_show_evitados += 1
 
-    return con_semaforo(contenedor)
+    actualizado = con_semaforo(contenedor)
+    # Giro: al mover o cancelar la cita, el operador tiene que enterarse aunque
+    # no tenga smartphone. Le mandamos un SMS solo, sin que nadie lo pida.
+    avisar(contenedor, "sms", motivo="reprogramar")
+    return actualizado
 
 
 # --- F3: revisión de documentos con IA --------------------------------------

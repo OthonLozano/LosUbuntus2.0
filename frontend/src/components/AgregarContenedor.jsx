@@ -23,6 +23,7 @@ const VACIO = {
   operador: '',
   placas: '',
   salida_planeada: '',
+  telefono: '',
 }
 
 // Lo mismo que acepta el backend en /api/extraer-viaje.
@@ -93,7 +94,7 @@ export default function AgregarContenedor({ onCreado, onCancelar }) {
 
   async function agregar(e) {
     e.preventDefault()
-    const limpio = { ...datos, id: datos.id.trim(), operador: datos.operador.trim(), placas: datos.placas.trim() }
+    const limpio = { ...datos, id: datos.id.trim(), operador: datos.operador.trim(), placas: datos.placas.trim(), telefono: datos.telefono.trim() }
     const problema = validar(limpio)
     if (problema) {
       setError(problema)
@@ -198,6 +199,11 @@ export default function AgregarContenedor({ onCreado, onCancelar }) {
         <label className="formulario__campo">
           Placas
           <input name="placas" value={datos.placas} onChange={cambiar} placeholder="52-AM-9F" maxLength={12} required />
+        </label>
+
+        <label className="formulario__campo formulario__campo--ancho">
+          Teléfono del operador (para SMS o voz; usa uno ficticio)
+          <input name="telefono" value={datos.telefono} onChange={cambiar} placeholder="229 000 0110" maxLength={20} />
         </label>
       </div>
 

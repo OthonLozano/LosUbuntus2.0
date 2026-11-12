@@ -33,7 +33,8 @@
         "estado": "na",
         "nota": "No aplica"
       }
-    ]
+    ],
+    "telefono": "229 000 0101"
   },
   {
     "id": "MSKU 715384-0",
@@ -69,7 +70,8 @@
         "estado": "ok",
         "nota": "Hoja de seguridad vigente"
       }
-    ]
+    ],
+    "telefono": "229 000 0102"
   },
   {
     "id": "TCLU 930571-3",
@@ -105,7 +107,8 @@
         "estado": "ok",
         "nota": "Certificado de limpieza vigente"
       }
-    ]
+    ],
+    "telefono": "229 000 0103"
   },
   {
     "id": "HLXU 286940-1",
@@ -141,7 +144,8 @@
         "estado": "na",
         "nota": "No aplica"
       }
-    ]
+    ],
+    "telefono": "229 000 0104"
   },
   {
     "id": "CMAU 558102-6",
@@ -177,7 +181,8 @@
         "estado": "falta",
         "nota": "Falta hoja de seguridad"
       }
-    ]
+    ],
+    "telefono": "229 000 0105"
   },
   {
     "id": "OOLU 649377-1",
@@ -213,7 +218,8 @@
         "estado": "ok",
         "nota": "Permiso de sobredimensión vigente"
       }
-    ]
+    ],
+    "telefono": "229 000 0106"
   },
   {
     "id": "TGHU 174826-8",
@@ -249,7 +255,8 @@
         "estado": "na",
         "nota": "No aplica"
       }
-    ]
+    ],
+    "telefono": "229 000 0107"
   },
   {
     "id": "SEGU 832065-3",
@@ -285,7 +292,8 @@
         "estado": "ok",
         "nota": ""
       }
-    ]
+    ],
+    "telefono": "229 000 0108"
   },
   {
     "id": "BMOU 491738-7",
@@ -321,6 +329,7 @@
         "estado": "ok",
         "nota": ""
       }
-    ]
+    ],
+    "telefono": "229 000 0109"
   }
 ]
