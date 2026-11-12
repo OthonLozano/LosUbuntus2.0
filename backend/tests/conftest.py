@@ -10,3 +10,6 @@ import os
 
 os.environ["PORTIX_HORA_ACTUAL"] = "06:15"
 os.environ["GEMINI_API_KEY"] = ""
+# Giro: sin Twilio en las pruebas; ningún SMS ni llamada sale de verdad.
+for variable in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM", "TELEFONO_DEMO", "TWILIO_PLANTILLA_PRUEBA"):
+    os.environ[variable] = ""

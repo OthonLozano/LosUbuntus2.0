@@ -43,8 +43,22 @@ Cada fase termina en una demo funcional. Si no alcanzamos todas, la última fase
 | 2. Estimación de tiempo | Congestión por hora (simulada a partir del promedio ITPAP), llegada estimada contra la ventana de la cita, sugerencia de reprogramar y contador de No Show evitados | Se cambia la hora de salida y el semáforo se recalcula | Lista (`fase-2`) |
 | 3. Revisión con IA | Carga de un PDF o una foto. La IA extrae los datos y los compara con los del viaje | Se sube un documento con un error y PORTIX lo detecta | Lista (`fase-3`) |
 | 4. Avisos a la agencia | Chat simulado dentro de la app. La IA interpreta la respuesta de la agencia y actualiza el estado | La agencia responde "ya quedó pagado, al rato te paso el comprobante": el pedimento sigue pendiente hasta que se sube el comprobante y la IA lo revisa; entonces el contenedor pasa a verde | Lista (`fase-4`) |
+| Giro. Aviso por SMS o voz | El operador sin smartphone recibe el color de su contenedor por SMS (≤160 caracteres, sin acentos) o por llamada de voz | Se cancela una cita en rojo y al celular del equipo le llega el SMS (Twilio) | Lista (`demoSMS`) |
 
 Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noche → Fase 4 y el giro del reto el jueves temprano → cierre a las 10:30.
+
+## Giro del reto: aviso por SMS o voz
+
+**El giro:** "Un transportista no tiene smartphone moderno: la solución debe avisarle por SMS o por mensaje de voz."
+
+**Cómo lo atendimos:** el semáforo ya no se queda en la pantalla del despachador; llega hasta la cabina del camión, a cualquier celular básico.
+
+- **SMS:** PORTIX le manda al operador el color de su contenedor y qué hacer: `PORTIX TGHU 174826-8: ROJO, NO SALGAS. Ya no llegas a la cita de las 05:45...`. Cada mensaje cabe en **160 caracteres y va sin acentos**, porque una sola "á" cambia la codificación del SMS y el límite baja a 70 caracteres (el mensaje se partiría).
+- **Voz:** una llamada que dice el mismo aviso en frases completas, **deletrea el número del contenedor** (para compararlo con la puerta) y lo **repite**. Sirve si el operador va manejando o lee con dificultad.
+- **Automático:** cuando el despachador mueve o cancela una cita, el operador recibe el SMS sin que nadie lo pida. También se puede mandar a mano desde el detalle del contenedor ("Enviar SMS", "Llamar").
+- **Real o simulado:** PORTIX manda el SMS y la llamada con la API de **Twilio** al celular de un integrante del equipo (que aceptó usarlo). Lo verificamos con nuestra cuenta: la **cuenta de prueba** de Twilio solo permite enviar sus **plantillas predefinidas** y no permite mensajes de voz propios. Por eso, en la demo, el **SMS sale de verdad** (el celular suena) con la plantilla de Twilio, mientras que **el texto de PORTIX se muestra en pantalla, declarado como simulado**. La **voz** se reproduce con "Escuchar aquí" (voz del navegador), también declarada como simulada. Con una cuenta completa de Twilio sale el texto de PORTIX sin cambiar el código (solo se vacía `TWILIO_PLANTILLA_PRUEBA`). Sin Twilio, o si falla, el aviso queda como **"Simulado"** y la pantalla lo dice.
+- **Privacidad:** los teléfonos de los operadores en los datos son ficticios (`229 000 01xx`). El número real de la demo vive solo en una variable de entorno del servidor y en pantalla se muestra enmascarado (`***1234`).
+- **Código:** todo lo de Twilio vive en `backend/avisos.py`, aislado igual que Gemini en `ia.py`.
 
 ## Tech stack
 
@@ -92,6 +106,9 @@ En esta versión no construiremos:
 | Congestión por hora del día | Simulada, ajustada al promedio del ITPAP |
 | Conexión con VUCEM, el SAT o los sistemas de citas de las terminales | No existe; se simula |
 | Mensajes de WhatsApp | Simulados dentro de la app |
+| Teléfonos de los operadores | Ficticios (`229 000 01xx`) |
+| SMS al operador (giro) | Envío real con Twilio al celular de un integrante del equipo; con la cuenta de prueba sale la plantilla de Twilio y el texto de PORTIX se muestra simulado (se indica en pantalla) |
+| Llamada de voz al operador (giro) | Simulada: la cuenta de prueba de Twilio no permite voz propia; se escucha en el navegador. El código para la llamada real existe (`avisos.py`) |
 
 ## Cómo correrlo
 
@@ -135,6 +152,8 @@ uvicorn servidor:app
 
 Abre http://localhost:8000.
 
+Para el giro (SMS y voz reales), configura además `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` y `TELEFONO_DEMO`, y con la cuenta de prueba de Twilio también `TWILIO_PLANTILLA_PRUEBA` (ver `backend/.env.example`). Sin ellas, los avisos se simulan.
+
 En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y corre el backend con Python. En el servicio hay que configurar las variables de entorno `GEMINI_API_KEY`, `GEMINI_MODEL` y `PORTIX_HORA_ACTUAL`.
 
 ## Bitácora de IA
@@ -152,6 +171,8 @@ En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y co
 | 2026-11-11 | Claude Code + Gemini | Escribir y probar `ia.py`: revisión de documentos e interpretación de mensajes | Salida en JSON con esquema, límite de 15 s por intento, modelo alterno si el principal está saturado y respuestas de respaldo declaradas |
 | 2026-11-11 | Claude Code | Arquitectura y alcance para el punto de control 2 | Dejamos fuera las integraciones reales y el modelo predictivo; esas partes se simularán y lo declararemos |
 | 2026-11-11 | Claude Code | Estructura base (F0): FastAPI, Vite + React y contrato de la API | Frontend mínimo escrito a mano, sin el boilerplate de la plantilla. Vite reenvía `/api` al backend, así que no hace falta CORS |
+| 2026-11-12 | Claude Code | Giro del reto: avisos al operador por SMS y voz con Twilio | SMS de 160 caracteres o menos y sin acentos (GSM-7) con plantilla fija, no con IA, para que no falle; voz que deletrea el contenedor; real con Twilio o simulado y declarado |
+| 2026-11-12 | Claude Code + Twilio | Probar el envío real con la cuenta de prueba de Twilio | La cuenta de prueba rechaza texto propio y voz propia; usamos su plantilla para el SMS real y declaramos simulado el texto de PORTIX y la voz |
 
 ## Fuentes
 

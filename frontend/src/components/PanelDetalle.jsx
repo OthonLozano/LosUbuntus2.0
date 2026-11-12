@@ -3,6 +3,7 @@ import Semaforo from './Semaforo.jsx'
 import BarraVentana from './BarraVentana.jsx'
 import SimularSalida from './SimularSalida.jsx'
 import Reprogramar from './Reprogramar.jsx'
+import AvisoOperador from './AvisoOperador.jsx'
 import Checklist from './vistas/Checklist.jsx'
 import { pendientesDe } from './vistas/ListaCompacta.jsx'
 import { CONGESTION, ESTADO_CITA, TIPOS_CARGA } from '../textos.js'
@@ -71,6 +72,10 @@ export default function PanelDetalle({
           {mensaje}
         </p>
       )}
+
+      {/* Giro del reto: el operador no tiene smartphone; se le avisa por SMS o voz.
+          Va justo después de la acción: primero se decide, luego se avisa al camión. */}
+      <AvisoOperador contenedor={c} />
 
       {c.estado_cita !== 'cancelada' && (
         <div className="bloque">

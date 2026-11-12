@@ -48,6 +48,9 @@ class Contenedor(BaseModel):
     documentos: list[Documento]
     # Tiene valor por defecto para que el JSON de datos no tenga que traerlo.
     estado_cita: EstadoCita = "activa"
+    # Giro: teléfono del operador para avisarle por SMS o voz. Es FICTICIO en
+    # los datos de la demo; los avisos reales van a TELEFONO_DEMO (ver avisos.py).
+    telefono: str = ""
 
 
 class ContenedorConSemaforo(Contenedor):
@@ -86,6 +89,8 @@ class ContenedorNuevo(BaseModel):
     operador: str = Field(min_length=2, max_length=60)
     placas: str = Field(min_length=5, max_length=12)
     salida_planeada: Hora
+    # Giro: opcional. Solo se muestra; los avisos reales van a TELEFONO_DEMO.
+    telefono: str = Field("", max_length=20)
 
     # mode="before": limpia el texto ANTES de revisar el patrón, para que
     # " msku 715384-0" se acepte como "MSKU 715384-0".
@@ -171,3 +176,28 @@ class Mensaje(BaseModel):
     de: Literal["portix", "agencia"]
     texto: str
     hora: str
+
+
+# --- Giro del reto: avisos al operador por SMS o voz -------------------------
+
+
+class PedirAviso(BaseModel):
+    """Cuerpo de POST /api/contenedores/{id}/avisar-operador."""
+
+    canal: Literal["sms", "voz"]
+
+
+class Aviso(BaseModel):
+    """Un aviso que PORTIX le mandó al operador (real con Twilio o simulado)."""
+
+    canal: Literal["sms", "voz"]
+    texto: str
+    real: bool  # True si Twilio lo aceptó; False si fue simulado
+    # True si salió con la plantilla de prueba de Twilio (cuenta de prueba):
+    # el SMS es real, pero su texto no es el de PORTIX.
+    plantilla: bool = False
+    destino: str  # el teléfono ficticio, o "teléfono de la demo (***1234)"
+    detalle: str  # por qué fue simulado, o el id de Twilio
+    hora: str
+    motivo: str  # "manual" (botón) o "reprogramar" (automático)
+

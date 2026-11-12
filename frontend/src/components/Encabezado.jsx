@@ -59,6 +59,19 @@ export default function Encabezado({ onReiniciar }) {
         >
           {sinConexion ? 'IA: sin conexión' : iaConectada ? 'IA: Gemini conectada' : 'IA: modo respaldo'}
         </span>
+        {/* Giro: si los SMS y llamadas al operador salen de verdad (Twilio) o se simulan. */}
+        {salud && (
+          <span
+            className={`chip ${salud.sms_modo === 'simulado' ? 'chip--aviso' : 'chip--ok'}`}
+            title="Avisos al operador sin smartphone"
+          >
+            {salud.sms_modo === 'real'
+              ? 'SMS/voz: reales (Twilio)'
+              : salud.sms_modo === 'plantilla'
+                ? 'SMS: real (plantilla de prueba) · voz: simulada'
+                : 'SMS/voz: simulados'}
+          </span>
+        )}
         <button type="button" className="boton boton--secundario" onClick={reiniciar} disabled={reiniciando}>
           {reiniciando ? 'Reiniciando...' : 'Reiniciar demo'}
         </button>

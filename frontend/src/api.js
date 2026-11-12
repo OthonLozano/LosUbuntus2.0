@@ -134,3 +134,19 @@ export async function extraerDatosViaje(archivo) {
   datos.append('archivo', archivo)
   return pedir('/api/extraer-viaje', { method: 'POST', body: datos })
 }
+
+// --- Giro del reto: avisos al operador por SMS o voz -------------------------
+// El operador no tiene smartphone. Si el servidor tiene Twilio configurado, el
+// SMS o la llamada salen de verdad; si no, el aviso es SIMULADO (real: false).
+
+// GET /api/contenedores/{id}/avisos → { avisos: [...], vista_previa: { sms, voz }, sms_real }
+export async function obtenerAvisos(id) {
+  return pedir(`${urlContenedor(id)}/avisos`)
+}
+
+// POST /api/contenedores/{id}/avisar-operador
+// cuerpo: { "canal": "sms" } o { "canal": "voz" }
+// Regresa { canal, texto, real, destino, detalle, hora, motivo }
+export async function avisarOperador(id, canal) {
+  return pedir(`${urlContenedor(id)}/avisar-operador`, enviarJson('POST', { canal }))
+}

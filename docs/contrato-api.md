@@ -94,6 +94,8 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
 | `POST /api/reiniciar` | Regresar la demo a su estado inicial | F5 |
 | `POST /api/contenedores` | Agregar un contenedor | F5 |
 | `POST /api/extraer-viaje` | La IA lee una carta porte para llenar el formulario | F5 |
+| `GET /api/contenedores/{id}/avisos` | Historial de avisos al operador y vista previa del SMS y la voz | Giro |
+| `POST /api/contenedores/{id}/avisar-operador` | Avisar al operador por SMS o llamada (Twilio o simulado) | Giro |
 
 Nota: el `id` lleva un espacio (`LTSU 402219-8`). En el frontend hay que codificarlo con `encodeURIComponent(id)` al armar la URL.
 
@@ -281,6 +283,47 @@ Nunca regresa la API key; `ia_configurada` solo dice si existe.
 - `id` se regresa ya en el formato `"ABCD 123456-7"` cuando se puede.
 - Mismos límites de archivo que `revisar-documento`: `415` si no es PDF, JPG o PNG y `413` si pasa de 10 MB.
 - Si `respaldo` es `true`, todos los campos llegan vacíos (sin IA no se puede leer el archivo, y no inventamos datos de ejemplo). Hay que mostrar la etiqueta "respuesta de respaldo"; viene además `motivo_respaldo`.
+
+## Giro: avisos al operador por SMS o voz
+
+El operador no tiene smartphone: PORTIX le avisa por SMS o con una llamada. Todo lo de Twilio vive en `backend/avisos.py`.
+
+- Un contenedor puede traer `telefono` (texto, opcional). En los datos de la demo es **ficticio**; los avisos reales siempre van a `TELEFONO_DEMO` (variable de entorno).
+- `GET /api/salud` agrega `sms_real` (`true` si Twilio está configurado) y `sms_modo`: `real` (cuenta completa), `plantilla` (cuenta de prueba: el SMS sale con la plantilla de Twilio y el texto de PORTIX solo se muestra) o `simulado`.
+
+**`POST /api/contenedores/{id}/avisar-operador`**: cuerpo `{ "canal": "sms" }` o `{ "canal": "voz" }` (otro canal responde `422`). Regresa el aviso:
+
+```json
+{
+  "canal": "sms",
+  "texto": "PORTIX TGHU 174826-8: ROJO, NO SALGAS. Ya no llegas a la cita de las 05:45. ...",
+  "real": true,
+  "plantilla": false,
+  "destino": "teléfono de la demo (***4567)",
+  "detalle": "Enviado por Twilio (SM...).",
+  "hora": "06:15",
+  "motivo": "manual"
+}
+```
+
+- `real: false` significa simulado (Twilio sin configurar o falló); `detalle` dice por qué y la UI muestra "Simulado".
+- `plantilla: true` (cuenta de prueba): el SMS salió de verdad, pero con la plantilla de Twilio; `texto` es el de PORTIX y solo se muestra en pantalla.
+- Con Twilio configurado, `destino` siempre es el teléfono de la demo enmascarado (`…, no enviado` si falló); el teléfono ficticio solo aparece cuando Twilio no está configurado.
+- El SMS siempre tiene 160 caracteres o menos y va sin acentos (GSM-7).
+- `motivo` es `manual` (botón) o `reprogramar`: al mover o cancelar una cita, el backend manda un SMS automático.
+
+**`GET /api/contenedores/{id}/avisos`**:
+
+```json
+{
+  "avisos": [ { "...": "los avisos enviados, en orden" } ],
+  "vista_previa": { "sms": "PORTIX ...", "voz": "Hola, S. Luna. Le habla PORTIX..." },
+  "sms_real": false,
+  "sms_modo": "simulado"
+}
+```
+
+`POST /api/reiniciar` también borra los avisos.
 
 ## Respuestas de respaldo
 
