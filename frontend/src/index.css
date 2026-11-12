@@ -1,3 +1,6 @@
+/* Fuentes del estilo "Puerto" (Google Fonts, licencia OFL). Debe ir al inicio del archivo. */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap');
+
 /* Estilos de PORTIX. Colores del semáforo con contraste suficiente para leerse en tablet. */
 :root {
   --fondo: #f5f6f8;
@@ -711,4 +714,211 @@ button:focus-visible, select:focus-visible {
 @media (max-width: 560px) {
   .app { padding: 12px; }
   .pestana { padding: 8px 10px; font-size: 0.875rem; }
+}
+
+/* ===================== Estilo "Puerto" ===================== */
+/* Lenguaje visual de transporte de carga: azul rey + naranja intenso,
+   títulos condensados en mayúsculas, bloques sólidos y botones tipo píldora.
+   Va al final del archivo para que estas reglas ganen sobre las anteriores.
+   Fuentes: Saira Condensed y Barlow (Google Fonts, licencia OFL), cargadas al
+   inicio de este archivo; si no hay internet se usa la fuente del sistema. */
+
+:root {
+  --rey: #1b33b5;
+  --rey-oscuro: #111f7a;
+  --rey-claro: #e9edfc;
+  --naranja: #f26b1d;
+  --naranja-oscuro: #c94f0c; /* para texto naranja sobre blanco */
+  --fondo: #f1f3f9;
+  --borde: #d9deec;
+  --acento: #1b33b5;
+  --titulos: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-family: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+body { background: var(--fondo); }
+
+/* Títulos y números: condensados, gruesos y en mayúsculas */
+h1, h2, h3,
+.resumen__numero,
+.resumen__texto,
+.pestana,
+.boton,
+.tabla th,
+.compacta__titulo,
+.etiqueta,
+.semaforo,
+.chip {
+  font-family: var(--titulos);
+}
+h2, h3, .resumen__texto, .tabla th, .compacta__titulo, .etiqueta, .pestana, .boton {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Barra superior azul con curva naranja ---------- */
+.cabecera {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, var(--rey-oscuro) 0%, var(--rey) 70%);
+  color: #fff;
+}
+/* Curva decorativa: un óvalo enorme con borde naranja que asoma a la derecha. */
+.cabecera::before {
+  content: '';
+  position: absolute;
+  right: -12%;
+  bottom: -220px;
+  width: 70%;
+  height: 300px;
+  border-radius: 50%;
+  border-top: 10px solid var(--naranja);
+  opacity: 0.9;
+  pointer-events: none;
+}
+.cabecera__interior { position: relative; max-width: 1280px; margin: 0 auto; padding: 14px 24px 0; }
+.cabecera .encabezado { margin-bottom: 10px; }
+.cabecera h1 { color: #fff; font-size: 2rem; font-weight: 800; letter-spacing: 0.08em; line-height: 1; }
+.cabecera .encabezado__sub {
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--titulos);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+}
+.cabecera .marca__semaforo { background: #0a1456; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25); }
+
+.cabecera .chip { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.35); color: #fff; font-size: 0.875rem; }
+.cabecera .chip strong { color: #ffb27d; }
+.cabecera .chip--ok { background: rgba(70, 195, 90, 0.22); border-color: #6fdc80; color: #e1fbe5; }
+.cabecera .chip--respaldo { background: rgba(242, 107, 29, 0.25); border-color: #ffb27d; color: #ffe6d4; }
+.cabecera .boton--secundario { background: transparent; color: #fff; border: 2px solid #fff; }
+.cabecera .boton--secundario:hover { background: #fff; color: var(--rey); }
+.cabecera .boton:focus-visible { outline-color: #ffb27d; }
+
+/* Pestañas: texto blanco; la activa lleva barra naranja gruesa */
+.cabecera .pestanas { border-bottom: none; margin-bottom: 0; gap: 2px; }
+.cabecera .pestana {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-bottom: 5px solid transparent;
+  margin-bottom: 0;
+}
+.cabecera .pestana:hover { color: #fff; }
+.cabecera .pestana[aria-selected="true"] { color: #fff; border-bottom-color: var(--naranja); }
+.cabecera .pestana:focus-visible { outline-color: #ffb27d; }
+.cabecera .pestana__contador { background: var(--naranja); color: #fff; font-weight: 700; border-radius: 4px; }
+
+.app { padding-top: 18px; }
+
+/* ---------- Bloques: sólidos, esquinas casi rectas, sin degradados ---------- */
+.resumen__tarjeta,
+.congestion,
+.tabla-envoltura,
+.detalle,
+.vista-dividida > *,
+.revision {
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(17, 31, 122, 0.06);
+  background: #fff;
+}
+
+/* KPIs: barra gruesa de color arriba, número grande condensado y etiqueta en mayúsculas */
+.resumen__tarjeta {
+  border-left-width: 1px;
+  border-top: 6px solid var(--borde);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 16px 12px;
+}
+.resumen__numero { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--rey-oscuro); }
+.resumen__texto { font-size: 0.95rem; font-weight: 700; }
+.resumen__tarjeta--verde { border-top-color: var(--verde); }
+.resumen__tarjeta--amarillo { border-top-color: var(--amarillo-punto); }
+.resumen__tarjeta--rojo { border-top-color: var(--rojo); }
+.resumen__tarjeta--noshow { border-top-color: var(--naranja); }
+.resumen__tarjeta--noshow .resumen__texto { color: var(--naranja-oscuro); }
+.resumen__tarjeta--horas { border-top-color: var(--rey); }
+.resumen__tarjeta--horas .resumen__texto { color: var(--rey); }
+.resumen__bloque { display: flex; flex-direction: column; }
+
+/* Títulos de sección: mayúsculas con una barra naranja inclinada */
+.barra-lista h2,
+.congestion__encabezado h2,
+.docs h3,
+.detalle h3,
+.bloque h3,
+.chat-agencia__encabezado h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rey-oscuro);
+  font-weight: 700;
+}
+.barra-lista h2::before,
+.congestion__encabezado h2::before,
+.docs h3::before,
+.chat-agencia__encabezado h3::before {
+  content: '';
+  width: 14px;
+  height: 0.9em;
+  background: var(--naranja);
+  transform: skewX(-20deg);
+}
+
+/* Congestión: barras en azul rey; la hora elegida en naranja */
+.congestion__barra { border-radius: 2px 2px 0 0; }
+.congestion__barra--baja { background: #b3c0f2; }
+.congestion__barra--media { background: #5a6fd6; }
+.congestion__barra--alta { background: var(--rey-oscuro); }
+.congestion__columna--resaltada { background: #fff1e8; box-shadow: inset 0 0 0 2px var(--naranja); }
+.congestion__nivel { font-family: var(--titulos); text-transform: uppercase; }
+
+/* ---------- Tabla ---------- */
+.tabla-envoltura { overflow: hidden; }
+.tabla th { background: var(--rey-oscuro); color: #fff; font-weight: 600; font-size: 0.85rem; }
+.tabla__fila:hover { background: #f6f8ff; }
+.tabla__fila--activa, .tabla__fila--activa:hover { background: #fff4ec; box-shadow: inset 5px 0 0 var(--naranja); }
+.tabla__id { color: var(--rey); }
+.detalle__encabezado h2, .compacta__id { color: var(--rey-oscuro); }
+
+/* Semáforo: etiqueta más sólida */
+.semaforo { font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; font-size: 0.8rem; border-width: 2px; }
+
+/* ---------- Botones tipo píldora ---------- */
+.boton {
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-weight: 700;
+  background: var(--rey);
+  border: 2px solid var(--rey);
+  transition: background 0.15s, color 0.15s;
+}
+.boton:not(:disabled):hover { background: var(--rey-oscuro); border-color: var(--rey-oscuro); }
+.boton--secundario { background: #fff; color: var(--rey); }
+.boton--secundario:not(:disabled):hover { background: var(--rey-claro); color: var(--rey-oscuro); }
+.boton--peligro { background: #fff; color: var(--rojo); border-color: var(--rojo); }
+.boton--peligro:not(:disabled):hover { background: var(--rojo-fondo); color: var(--rojo); border-color: var(--rojo); }
+/* El botón principal del Panel va en naranja, con texto blanco grueso */
+.barra-lista .boton { background: var(--naranja); border-color: var(--naranja); color: #fff; }
+.barra-lista .boton:not(:disabled):hover { background: var(--naranja-oscuro); border-color: var(--naranja-oscuro); }
+
+/* ---------- Listas laterales ---------- */
+.compacta__titulo { color: var(--rey-oscuro); font-weight: 700; }
+.compacta__item { border-radius: 4px; border-left: 4px solid transparent; }
+.compacta__item--activo, .compacta__item--activo:hover { background: #fff4ec; border-color: transparent; border-left-color: var(--naranja); }
+
+/* ---------- Chat ---------- */
+.chat { background: #f4f6fc; border-radius: 6px; }
+.chat__mensaje { border-radius: 10px; }
+.chat__mensaje--portix { border-bottom-left-radius: 2px; }
+.chat__mensaje--agencia { background: var(--rey); border-color: var(--rey); color: #fff; border-bottom-right-radius: 2px; }
+.chat__mensaje--agencia .chat__quien { color: rgba(255, 255, 255, 0.8); }
+
+@media (max-width: 560px) {
+  .cabecera__interior { padding: 12px 12px 0; }
+  .cabecera::before { display: none; }
 }
