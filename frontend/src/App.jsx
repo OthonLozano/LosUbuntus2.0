@@ -207,61 +207,68 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <Encabezado onReiniciar={onReiniciar} />
+    <>
+      {/* Barra azul de lado a lado (estilo "Puerto"): encabezado y pestañas. */}
+      <div className="cabecera">
+        <div className="cabecera__interior">
+          <Encabezado onReiniciar={onReiniciar} />
 
-      <nav className="pestanas" role="tablist" aria-label="Vistas de PORTIX" onKeyDown={alTeclearPestanas}>
-        {VISTAS.map((v) => (
-          <button
-            key={v.id}
-            id={`pestana-${v.id}`}
-            type="button"
-            role="tab"
-            aria-selected={vista === v.id}
-            aria-controls="vista-activa"
-            tabIndex={vista === v.id ? 0 : -1}
-            className="pestana"
-            onClick={() => irA(v.id)}
-          >
-            {v.texto}
-            {v.id !== 'panel' && conPendientes > 0 && (
-              <span
-                className="pestana__contador"
-                aria-label={`${conPendientes} contenedores con documentos pendientes`}
+          <nav className="pestanas" role="tablist" aria-label="Vistas de PORTIX" onKeyDown={alTeclearPestanas}>
+            {VISTAS.map((v) => (
+              <button
+                key={v.id}
+                id={`pestana-${v.id}`}
+                type="button"
+                role="tab"
+                aria-selected={vista === v.id}
+                aria-controls="vista-activa"
+                tabIndex={vista === v.id ? 0 : -1}
+                className="pestana"
+                onClick={() => irA(v.id)}
               >
-                {conPendientes}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      <div id="vista-activa" role="tabpanel" aria-labelledby={`pestana-${vista}`}>
-        {cargando && <p>Cargando contenedores...</p>}
-        {errorCarga && <p className="detalle__error">{errorCarga}</p>}
-
-        {!cargando && !errorCarga && (
-          <>
-            {vista === 'panel' && (
-              <VistaPanel
-                {...comunes}
-                resumen={resumen}
-                congestion={congestion}
-                mensaje={mensaje}
-                onReprogramar={onReprogramar}
-                onIrA={irA}
-                onContenedorAgregado={onContenedorAgregado}
-              />
-            )}
-            {vista === 'documentos' && <VistaDocumentos {...comunes} />}
-            {vista === 'chat' && <VistaChat {...comunes} />}
-          </>
-        )}
+                {v.texto}
+                {v.id !== 'panel' && conPendientes > 0 && (
+                  <span
+                    className="pestana__contador"
+                    aria-label={`${conPendientes} contenedores con documentos pendientes`}
+                  >
+                    {conPendientes}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
 
-      <footer className="pie">
-        Contenedores, operadores y placas son datos sintéticos. La congestión por hora es simulada.
-      </footer>
-    </div>
+      <div className="app">
+        <div id="vista-activa" role="tabpanel" aria-labelledby={`pestana-${vista}`}>
+          {cargando && <p>Cargando contenedores...</p>}
+          {errorCarga && <p className="detalle__error">{errorCarga}</p>}
+
+          {!cargando && !errorCarga && (
+            <>
+              {vista === 'panel' && (
+                <VistaPanel
+                  {...comunes}
+                  resumen={resumen}
+                  congestion={congestion}
+                  mensaje={mensaje}
+                  onReprogramar={onReprogramar}
+                  onIrA={irA}
+                  onContenedorAgregado={onContenedorAgregado}
+                />
+              )}
+              {vista === 'documentos' && <VistaDocumentos {...comunes} />}
+              {vista === 'chat' && <VistaChat {...comunes} />}
+            </>
+          )}
+        </div>
+
+        <footer className="pie">
+          Contenedores, operadores y placas son datos sintéticos. La congestión por hora es simulada.
+        </footer>
+      </div>
+    </>
   )
 }
