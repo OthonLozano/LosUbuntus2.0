@@ -11,7 +11,7 @@ Hackathon Veracruz Tech Week 2026 · Reto 1: Puerto que fluye
 - Los cambios viven en memoria y los ve cualquiera que abra el link. El botón **"Reiniciar demo"** regresa todo al estado inicial.
 - Si Gemini no responde, la app usa respuestas de respaldo y lo indica en pantalla. Lo simulado está etiquetado.
 
-**Pruébalo en 3 pasos:**
+## Cómo se usa (pruébalo en 3 pasos)
 
 1. En **Panel**, elige un contenedor en rojo y cancela su cita: se suma un No Show evitado y se avisa al operador por SMS.
 2. En **Documentos**, sube una carta porte (PDF o foto) para que la IA la compare con el viaje. En [docs/pruebas/](docs/pruebas/) hay dos documentos sintéticos del contenedor TCLU 930571-3: una carta porte con placas que no coinciden y un comprobante de pago del pedimento.
@@ -73,7 +73,7 @@ Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noch
 - **Privacidad:** los teléfonos de los operadores en los datos son ficticios (`229 000 01xx`). El número real de la demo vive solo en una variable de entorno del servidor y en pantalla se muestra enmascarado (`***1234`).
 - **Código:** todo lo de Twilio vive en `backend/avisos.py`, aislado igual que Gemini en `ia.py`.
 
-## Tech stack
+## Tecnologías
 
 - **Frontend:** React con Vite.
 - **Backend:** FastAPI (Python).
@@ -113,7 +113,9 @@ En esta versión no construimos:
 - Validación de documentos contra el SAT. La IA solo revisa que sean consistentes con los datos del viaje.
 - Coordinación entre varias transportistas o agencias, que queda como visión a futuro.
 
-## Qué es real y qué es simulado
+## Datos usados: qué es real y qué es simulado
+
+Solo usamos datos públicos y sintéticos. Los datos de la demo están en `backend/data/contenedores.json` (contenedores, operadores, placas y teléfonos inventados) y `backend/data/congestion.json` (congestión por hora, supuesta por el equipo). Los documentos de prueba están en `docs/pruebas/`. Las cifras públicas vienen de las fuentes al final de este README.
 
 | Elemento | Estado |
 |---|---|
@@ -132,7 +134,7 @@ En esta versión no construimos:
 | SMS al operador (giro) | Envío real con Twilio al celular de un integrante del equipo; con la cuenta de prueba sale la plantilla de Twilio y el texto de PORTIX se muestra simulado (se indica en pantalla) |
 | Llamada de voz al operador (giro) | Simulada: la cuenta de prueba de Twilio no permite voz propia; se escucha en el navegador. El código para la llamada real existe (`avisos.py`) |
 
-## Cómo correrlo
+## Cómo se instala y se corre
 
 Requisitos: Python 3.11 o más reciente y Node 20 o más reciente.
 
@@ -198,8 +200,10 @@ En la nube se usa el `Dockerfile` de la raíz: compila el frontend con Node y co
 | 2026-11-12 | Claude Code | Despliegue en un solo servicio (`servidor.py` y `Dockerfile`) en Render | La API sirve también el frontend compilado: un solo enlace y sin CORS. Las keys van en variables de entorno del servicio |
 | 2026-11-12 | Claude Code | Giro del reto: avisos al operador por SMS y voz con Twilio | SMS de 160 caracteres o menos y sin acentos (GSM-7) con plantilla fija, no con IA, para que no falle; voz que deletrea el contenedor; real con Twilio o simulado y declarado |
 | 2026-11-12 | Claude Code + Twilio | Probar el envío real con la cuenta de prueba de Twilio | La cuenta de prueba rechaza texto propio y voz propia; usamos su plantilla para el SMS real y declaramos simulado el texto de PORTIX y la voz |
+| 2026-11-11 y 12 | Claude Code | Investigar fuentes y programar el backend de PORTIX por fases: semáforo, revisión con Gemini, chat con la agencia y avisos por SMS con Twilio | El rojo solo aparece cuando el camión ya no alcanza su cita aun saliendo en ese momento. Todo lo simulado se marca en pantalla |
 | 2026-11-11 | Claude (plan gratuito) | Generar los datos sintéticos (contenedores, operadores y placas) y simular documentos para probar el programa | Solo datos inventados, para cubrir cada color del semáforo sin usar datos personales reales |
 | 2026-11-11 y 12 | Claude Code | Frontend de las fases 2 a 5: tablero, revisión de documentos, chat con la agencia, vistas con pestañas y estilo visual | El color nunca es la única señal: cada estado y cada hallazgo de la IA también va en texto ("✓ Sí / ✗ No", "Antes Espera → Ahora Sale"). Todo lo simulado o de respaldo se marca en pantalla |
+| 2026-11-12 | ChatGPT | Practicar el pitch | Ensayar la presentación de 4 minutos y las respuestas a posibles preguntas del jurado |
 | 2026-11-12 | Claude Code | Ficha de una página para la entrega (`docs/ficha-PORTIX.pdf`) | Resume problema, solución, giro, impacto y qué es real o simulado, con fuentes |
 
 ## Fuentes
