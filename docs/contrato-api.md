@@ -141,18 +141,41 @@ La tabla vive en `backend/data/congestion.json` (de 06 a 17 h). Las horas que no
 - **Mover:** además de la cita, cambia `salida_planeada` a la última hora con la que el camión llega justo a la nueva cita. Si con la hora actual ya no alcanza a llegar, responde `422` con la explicación en `detail`.
 - **Cancelar:** el contenedor queda en **amarillo** ("Solicitar una nueva cita a la terminal"), porque sigue pendiente de una cita nueva. Cancelar dos veces responde `422`.
 
-**`POST /api/contenedores/{id}/revisar-documento`**: se envía como `multipart/form-data` con un campo `archivo` (PDF, JPG o PNG). Regresa:
+**`POST /api/contenedores/{id}/revisar-documento`** (implementado): se envía como `multipart/form-data` con estos campos:
+
+- `archivo` (obligatorio): PDF, JPG o PNG, de máximo 10 MB. Otro tipo de archivo responde `415`.
+- `documento` (opcional): qué renglón del checklist actualizar, `carta_porte` o `pedimento`. Si no se manda, se usa el tipo que detecte la IA.
+
+En el frontend se arma así:
+
+```js
+const datos = new FormData()
+datos.append('archivo', archivoElegido)       // el File del <input type="file">
+datos.append('documento', 'carta_porte')      // opcional
+fetch(`/api/contenedores/${encodeURIComponent(id)}/revisar-documento`, { method: 'POST', body: datos })
+```
+
+No hay que poner `Content-Type` a mano: el navegador lo pone solo con `FormData`. Regresa:
 
 ```json
 {
-  "tipo_documento": "carta_porte",
-  "datos_extraidos": { "placas": "52-AM-9E", "operador": "L. Ramírez", "contenedor": "LTSU 402219-8" },
-  "diferencias": ["Las placas del documento (52-AM-9E) no coinciden con las del viaje (52-AM-9F)"],
+  "tipo_detectado": "carta_porte",
+  "legible": true,
+  "hallazgos": [
+    { "campo": "contenedor", "valor_en_documento": "TCLU 930571-3", "valor_esperado": "TCLU 930571-3", "coincide": true },
+    { "campo": "placas", "valor_en_documento": "25-AM-9F", "valor_esperado": "61-CD-7H", "coincide": false }
+  ],
   "estado_sugerido": "error",
+  "resumen": "Las placas de la carta porte no coinciden con la unidad asignada.",
   "respaldo": false,
+  "documento_actualizado": "carta_porte",
   "contenedor": { "...": "el contenedor con su color recalculado" }
 }
 ```
+
+- El renglón `documento_actualizado` del checklist queda en `ok` o `error` (según `estado_sugerido`), y su `nota` guarda el `resumen`.
+- Tarda unos 4 a 8 segundos (es la llamada a Gemini): el frontend debe mostrar un "Revisando…" mientras tanto.
+- Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo". En ese caso viene además `motivo_respaldo`.
 
 **`POST /api/contenedores/{id}/chat`**
 

@@ -13,8 +13,12 @@ import os
 import re
 from pathlib import Path
 
+from typing import Optional
+
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+
+import ia
 
 from modelos import (
     PATRON_HORA,
@@ -205,6 +209,64 @@ def reprogramar(id: str, cuerpo: Reprogramar):
         no_show_evitados += 1
 
     return con_semaforo(contenedor)
+
+
+# --- F3: revisión de documentos con IA --------------------------------------
+
+TIPOS_ARCHIVO = {"application/pdf", "image/jpeg", "image/png"}
+TAMANO_MAXIMO_MB = 10
+
+
+# `def` (no `async def`) a propósito: la llamada a Gemini tarda unos segundos
+# y así FastAPI la corre en otro hilo sin congelar las demás peticiones.
+@app.post("/api/contenedores/{id}/revisar-documento")
+def revisar_documento(
+    id: str,
+    archivo: UploadFile = File(...),
+    documento: Optional[str] = Form(None),
+):
+    """Recibe un PDF o una foto, la IA lo compara con el viaje y actualiza el checklist.
+
+    - archivo: el PDF, JPG o PNG que subió el despachador.
+    - documento (opcional): qué renglón del checklist actualizar
+      ("carta_porte" o "pedimento"). Si no se manda, se usa el tipo que
+      detectó la IA, y si no lo reconoce, "carta_porte".
+
+    El documento queda en "ok" si todo coincide, o en "error" si algo no
+    coincide o no se pudo leer. La nota guarda el resumen de la IA.
+    """
+    contenedor = buscar(id)
+
+    if archivo.content_type not in TIPOS_ARCHIVO:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Tipo de archivo no permitido ({archivo.content_type}). Usa PDF, JPG o PNG.",
+        )
+    contenido = archivo.file.read()
+    if len(contenido) > TAMANO_MAXIMO_MB * 1024 * 1024:
+        raise HTTPException(status_code=413, detail=f"El archivo pasa de {TAMANO_MAXIMO_MB} MB.")
+
+    revision = ia.revisar_documento(
+        contenido, archivo.content_type, contenedor.model_dump(), archivo.filename or ""
+    )
+
+    # ¿Qué renglón del checklist actualizamos?
+    tipo = documento or (
+        revision["tipo_detectado"] if revision["tipo_detectado"] in ("carta_porte", "pedimento")
+        else "carta_porte"
+    )
+    renglon = next((d for d in contenedor.documentos if d.tipo == tipo), None)
+    if renglon is None:
+        raise HTTPException(status_code=404, detail=f"El contenedor '{id}' no tiene el documento '{tipo}'")
+
+    renglon.estado = revision["estado_sugerido"]
+    renglon.nota = revision["resumen"] + (" (respuesta de respaldo)" if revision["respaldo"] else "")
+
+    return {
+        **revision,
+        "documento_actualizado": tipo,
+        "contenedor": con_semaforo(contenedor),
+    }
 
 
 @app.get("/api/resumen", response_model=Resumen)
