@@ -3,9 +3,9 @@ import Semaforo from './Semaforo.jsx'
 import BarraVentana from './BarraVentana.jsx'
 import SimularSalida from './SimularSalida.jsx'
 import Reprogramar from './Reprogramar.jsx'
-import SubirDocumento from './SubirDocumento.jsx'
-import ChatAgencia from './ChatAgencia.jsx'
-import { CONGESTION, DOCUMENTOS, ESTADO_CITA, ESTADOS_DOC, TIPOS_CARGA } from '../textos.js'
+import Checklist from './vistas/Checklist.jsx'
+import { pendientesDe } from './vistas/ListaCompacta.jsx'
+import { CONGESTION, ESTADO_CITA, TIPOS_CARGA } from '../textos.js'
 
 // App le pone una key con el id, la cita y la salida: al cambiar de contenedor
 // (o al reprogramarlo), el panel se crea de nuevo y se borra la prueba de salida.
@@ -16,7 +16,7 @@ export default function PanelDetalle({
   mensaje,
   onCambiarDocumento,
   onReprogramar,
-  onDocumentoRevisado,
+  onIrA,
 }) {
   const [simulado, setSimulado] = useState(null)
 
@@ -49,6 +49,22 @@ export default function PanelDetalle({
         <span className="etiqueta">Acción sugerida</span>
         {c.accion_sugerida}
       </p>
+
+      {/* Subir documentos y el chat viven en sus propias pestañas. Estos botones
+          cambian de pestaña sin perder el contenedor elegido. */}
+      <div className="detalle__atajos">
+        <button type="button" className="boton boton--secundario" onClick={() => onIrA('documentos')}>
+          Revisar documento con IA →
+        </button>
+        <button
+          type="button"
+          // Si tiene pendientes, avisar a la agencia es lo más urgente: va resaltado.
+          className={`boton ${pendientesDe(c) > 0 ? '' : 'boton--secundario'}`}
+          onClick={() => onIrA('chat')}
+        >
+          Avisar a la agencia →
+        </button>
+      </div>
 
       {mensaje && (
         <p className="detalle__exito" role="status">
@@ -96,33 +112,7 @@ export default function PanelDetalle({
       </dl>
 
       <h3>Checklist de documentos</h3>
-      <ul className="checklist">
-        {c.documentos.map((d) => (
-          <li key={d.tipo} className={`checklist__item checklist__item--${d.estado}`}>
-            <div className="checklist__texto">
-              <label htmlFor={`doc-${d.tipo}`}>{DOCUMENTOS[d.tipo]}</label>
-              {d.nota && <span className="checklist__nota">{d.nota}</span>}
-            </div>
-            <select
-              id={`doc-${d.tipo}`}
-              value={d.estado}
-              disabled={guardando}
-              onChange={(e) => onCambiarDocumento(c.id, d.tipo, e.target.value)}
-            >
-              {Object.entries(ESTADOS_DOC).map(([valor, texto]) => (
-                <option key={valor} value={valor}>
-                  {texto}
-                </option>
-              ))}
-            </select>
-          </li>
-        ))}
-      </ul>
-
-      <SubirDocumento contenedor={c} onRevisado={onDocumentoRevisado} />
-
-      {/* Al terminar también basta con volver a pedir la lista, igual que en F3. */}
-      <ChatAgencia contenedor={c} onActualizado={onDocumentoRevisado} />
+      <Checklist contenedor={c} guardando={guardando} onCambiarDocumento={onCambiarDocumento} />
 
       <p className="detalle__estado" aria-live="polite">
         {guardando && 'Guardando y recalculando el color...'}

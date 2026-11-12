@@ -12,7 +12,9 @@ function resumenDocumentos(documentos) {
   }
 }
 
-export default function ListaContenedores({ contenedores, seleccionadoId, onSeleccionar }) {
+// cambiados: { id: true } de los contenedores que cambiaron de color en la última
+// carga. Esa fila parpadea 1 s con su color nuevo (la clase la quita App).
+export default function ListaContenedores({ contenedores, seleccionadoId, onSeleccionar, cambiados = {} }) {
   return (
     <div className="tabla-envoltura">
       <table className="tabla">
@@ -29,10 +31,13 @@ export default function ListaContenedores({ contenedores, seleccionadoId, onSele
           {contenedores.map((c) => {
             const docs = resumenDocumentos(c.documentos)
             const activo = c.id === seleccionadoId
+            const clases = ['tabla__fila']
+            if (activo) clases.push('tabla__fila--activa')
+            if (cambiados[c.id]) clases.push(`cambio cambio--${c.color}`)
             return (
               <tr
                 key={c.id}
-                className={activo ? 'tabla__fila tabla__fila--activa' : 'tabla__fila'}
+                className={clases.join(' ')}
                 onClick={() => onSeleccionar(c.id)}
               >
                 <td>

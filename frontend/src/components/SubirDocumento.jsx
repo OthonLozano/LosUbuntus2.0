@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { revisarDocumento } from '../api.js'
 import { CAMPOS_REVISION, DOCUMENTOS, ESTADOS_DOC, TIPOS_DOCUMENTO } from '../textos.js'
+import AntesDespues from './vistas/AntesDespues.jsx'
 
 // Lo mismo que acepta el backend: PDF, JPG o PNG de máximo 10 MB.
 const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png']
@@ -41,9 +42,11 @@ export default function SubirDocumento({ contenedor, onRevisado }) {
     setRevisando(true)
     setError('')
     setResultado(null)
+    // Guardamos el color de antes para mostrar el "antes → después".
+    const colorAntes = contenedor.color
     try {
       const r = await revisarDocumento(contenedor.id, archivo, documento)
-      setResultado(r)
+      setResultado({ ...r, colorAntes })
       await onRevisado()
     } catch (err) {
       setError(`No se pudo revisar el documento. ${err.message}`)
@@ -117,6 +120,7 @@ function ResultadoRevision({ r }) {
       </div>
 
       <p className="revision__resumen">{r.resumen}</p>
+      <AntesDespues antes={r.colorAntes} despues={r.contenedor?.color} />
 
       {!r.legible && <p className="detalle__error">La IA no pudo leer bien el documento.</p>}
 
@@ -136,7 +140,11 @@ function ResultadoRevision({ r }) {
                 <td>{CAMPOS_REVISION[h.campo] || h.campo}</td>
                 <td>{h.valor_en_documento || '—'}</td>
                 <td>{h.valor_esperado || '—'}</td>
-                <td>{h.coincide ? '✓ Sí' : '✗ No'}</td>
+                <td>
+                  <span className={`coincide coincide--${h.coincide ? 'si' : 'no'}`}>
+                    {h.coincide ? '✓ Sí' : '✗ No'}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
