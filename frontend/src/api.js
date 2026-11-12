@@ -102,3 +102,35 @@ export async function enviarMensajeAgencia(id, texto) {
   if (USAR_DATOS_FALSOS) return falsos.enviarMensajeAgencia(id, texto)
   return pedir(`${urlContenedor(id)}/chat`, enviarJson('POST', { texto }))
 }
+
+// --- F5 ------------------------------------------------------------------
+// Estas funciones no tienen versión en datosFalsos.js: la F5 se hizo con el
+// backend ya conectado.
+
+// GET /api/salud → { estado, servicio, ia_configurada, modelo, hora_actual }
+// El encabezado lo usa para mostrar la hora de la demo y si la IA está conectada.
+export async function obtenerSalud() {
+  return pedir('/api/salud')
+}
+
+// POST /api/reiniciar → { ok, hora_actual }
+// Regresa la demo a su estado inicial: contenedores del JSON, contador en 0 y chats vacíos.
+export async function reiniciarDemo() {
+  return pedir('/api/reiniciar', { method: 'POST' })
+}
+
+// POST /api/contenedores → el contenedor nuevo con su color calculado (201)
+// cuerpo: { id, tipo_carga, terminal, cita, operador, placas, salida_planeada }
+// Responde 409 si el id ya existe y 422 si algún dato no es válido (el motivo llega en el Error).
+export async function crearContenedor(datos) {
+  return pedir('/api/contenedores', enviarJson('POST', datos))
+}
+
+// POST /api/extraer-viaje (opcional) → { id, operador, placas, terminal, respaldo, motivo_respaldo? }
+// La IA lee una carta porte para llenar el formulario de "Agregar contenedor".
+// Se manda como FormData porque lleva un archivo (igual que revisarDocumento).
+export async function extraerDatosViaje(archivo) {
+  const datos = new FormData()
+  datos.append('archivo', archivo)
+  return pedir('/api/extraer-viaje', { method: 'POST', body: datos })
+}

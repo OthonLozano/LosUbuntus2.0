@@ -123,7 +123,30 @@ def salud():
         "servicio": "PORTIX",
         "ia_configurada": bool(os.getenv("GEMINI_API_KEY")),
         "modelo": os.getenv("GEMINI_MODEL") or None,
+        # F5: el frontend la muestra en el encabezado ("Hora de la demo").
+        "hora_actual": hora_actual(),
     }
+
+
+@app.post("/api/reiniciar")
+def reiniciar():
+    """F5: regresa la demo a su estado inicial sin reiniciar el servidor.
+
+    Vuelve a leer los JSON, pone el contador de No Show en 0 y borra los chats.
+    Sirve para empezar la presentación limpia aunque alguien ya haya movido cosas.
+    """
+    # `global` porque estas variables viven a nivel del módulo y las usan los
+    # demás endpoints. Sin `global`, Python crearía variables locales nuevas y
+    # el resto de la API seguiría viendo los datos viejos.
+    global contenedores, congestion, no_show_evitados
+    contenedores = cargar_contenedores()
+    congestion = cargar_congestion()
+    no_show_evitados = 0
+    # `conversaciones` se define más abajo (sección F4). Lo vaciamos con
+    # clear() en vez de reasignarlo: así no hace falta `global` y cualquier
+    # referencia al mismo diccionario ve el cambio.
+    conversaciones.clear()
+    return {"ok": True, "hora_actual": hora_actual()}
 
 
 @app.get("/api/contenedores", response_model=list[ContenedorConSemaforo])

@@ -80,7 +80,7 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
 
 | Método y ruta | Para qué | Fase |
 |---|---|---|
-| `GET /api/salud` | Prueba de que el backend corre (ya existe) | F0 |
+| `GET /api/salud` | Prueba de que el backend corre; incluye la hora de la demo | F0 / F5 |
 | `GET /api/contenedores` | Lista con color calculado | F1 |
 | `GET /api/contenedores/{id}` | Detalle de un contenedor | F1 |
 | `PATCH /api/contenedores/{id}/documentos` | Cambiar el estado de un documento | F1 |
@@ -91,6 +91,9 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
 | `POST /api/contenedores/{id}/revisar-documento` | Subir un PDF o una foto para que la IA lo revise | F3 |
 | `GET /api/contenedores/{id}/chat` | Historial del chat con la agencia | F4 |
 | `POST /api/contenedores/{id}/chat` | Mensaje de la agencia; la IA lo interpreta | F4 |
+| `POST /api/reiniciar` | Regresar la demo a su estado inicial | F5 |
+| `POST /api/contenedores` | Agregar un contenedor | F5 |
+| `POST /api/extraer-viaje` | La IA lee una carta porte para llenar el formulario (opcional) | F5 |
 
 Nota: el `id` lleva un espacio (`LTSU 402219-8`). En el frontend hay que codificarlo con `encodeURIComponent(id)` al armar la URL.
 
@@ -107,8 +110,15 @@ Son la forma inicial. Quien implemente el endpoint puede ajustarla, pero tiene q
 **`GET /api/resumen`**
 
 ```json
-{ "verde": 3, "amarillo": 2, "rojo": 2, "no_show_evitados": 0, "ahorro_mxn": 0 }
+{
+  "verde": 3, "amarillo": 2, "rojo": 2,
+  "no_show_evitados": 0, "ahorro_mxn": 0,
+  "detenidos_por_documentos": 4, "horas_espera_evitadas": 15.3
+}
 ```
+
+- `detenidos_por_documentos` (F5): contenedores con algún documento en `falta` o `error`. PORTIX evitó que salieran a hacer fila con papeles incompletos.
+- `horas_espera_evitadas` (F5): **estimación**, `detenidos_por_documentos × 3.825 h` (espera promedio del ITPAP de septiembre 2026, 3:49:30, T21).
 
 **`GET /api/congestion`**: la congestión es simulada; el ITPAP solo publica un promedio mensual.
 
@@ -224,6 +234,51 @@ Regresa (la `interpretacion` es tal cual la da `ia.interpretar_mensaje()`):
 - `mensajes` es el historial completo, para pintarlo sin pedir otra vez el GET.
 - Tarda unos segundos (la llamada a Gemini): el frontend debe mostrar un "Interpretando…" mientras tanto.
 - Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo". En ese caso viene además `interpretacion.motivo_respaldo`.
+
+## F5: demo, agregar contenedores y datos con IA
+
+**`GET /api/salud`**: además de lo que ya regresaba, trae la hora del reloj de la demo.
+
+```json
+{ "estado": "ok", "servicio": "PORTIX", "ia_configurada": true, "modelo": "gemini-...", "hora_actual": "06:15" }
+```
+
+Nunca regresa la API key; `ia_configurada` solo dice si existe.
+
+**`POST /api/reiniciar`** (implementado): sin cuerpo. Vuelve a leer los JSON, pone el contador de No Show en 0 y borra los chats. También borra los contenedores agregados con `POST /api/contenedores`.
+
+```json
+{ "ok": true, "hora_actual": "06:15" }
+```
+
+**`POST /api/contenedores`** (por implementar): agrega un contenedor y lo regresa con su color calculado (`201`).
+
+```json
+{
+  "id": "ABCD 123456-7",
+  "tipo_carga": "general",
+  "terminal": "ICAVE",
+  "cita": "11:00",
+  "operador": "R. Gómez",
+  "placas": "52-AM-9F",
+  "salida_planeada": "10:00"
+}
+```
+
+- `id` con formato `"ABCD 123456-7"`: 4 letras, espacio, 6 dígitos, guion y 1 dígito. El backend lo pasa a mayúsculas.
+- `tipo_carga`, `terminal`, `cita` y `salida_planeada` aceptan los mismos valores que un contenedor normal.
+- Los documentos empiezan en `falta`. Si `tipo_carga` es `general`, `requisito_carga` va en `na` ("No aplica").
+- Responde `409` si el `id` ya existe y `422` si algún dato no es válido (el motivo va en `detail`).
+- Se guarda en memoria, como todo lo demás: `POST /api/reiniciar` o reiniciar el servidor lo borran.
+
+**`POST /api/extraer-viaje`** (opcional, por implementar): se envía como `multipart/form-data` con el campo `archivo` (PDF, JPG o PNG, máximo 10 MB). La IA lee una carta porte y regresa los datos para **llenar** el formulario de agregar contenedor; no guarda nada.
+
+```json
+{ "id": "ABCD 123456-7", "operador": "R. Gómez", "placas": "52-AM-9F", "terminal": "ICAVE", "respaldo": false }
+```
+
+- Un campo que la IA no encuentre llega como `""` (o `null` en `terminal`).
+- Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo"; viene además `motivo_respaldo`.
 
 ## Respuestas de respaldo
 
