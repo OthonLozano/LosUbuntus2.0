@@ -56,6 +56,32 @@ Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noch
 - **Desarrollo:** asistido con Claude Code.
 - **Despliegue:** por definir.
 
+## Arquitectura (planeada)
+
+```
+Navegador (React + Vite)
+   ↓ API REST
+FastAPI
+   ├─ semaforo.py → reglas de color y estimación de tiempo
+   ├─ ia.py       → Gemini (revisión de documentos e interpretación de mensajes)
+   └─ data/*.json → contenedores y congestión (sintéticos)
+```
+
+Se desplegará como un solo servicio: el backend también servirá el frontend.
+
+## Fuera de alcance
+
+En esta versión no construiremos:
+
+- Conexión real con VUCEM, el SAT o los sistemas de citas de las terminales.
+- WhatsApp real; el chat será simulado.
+- Un modelo predictivo entrenado. No hay datos públicos por hora, así que usaremos reglas y congestión simulada.
+- Rastreo GPS en tiempo real.
+- Usuarios, login ni soporte para varias empresas.
+- Base de datos; usaremos archivos JSON.
+- Validación de documentos contra el SAT. Solo revisaremos que sean consistentes entre sí.
+- Coordinación entre varias transportistas o agencias, que queda como visión a futuro.
+
 ## Qué es real y qué es simulado
 
 | Elemento | Estado |
@@ -83,6 +109,7 @@ Pendiente.
 | 2026-11-11 | Claude Code | Borrador de este README | Revisado y ajustado por el equipo |
 | 2026-11-11 | Claude Code + búsqueda web | Comparar APIs de IA gratuitas (Grok, Gemini, Groq) | Gemini: tiene plan gratuito y lee imágenes y PDFs. Groq queda como respaldo para texto |
 | 2026-11-11 | Claude Code | Plan de trabajo del equipo: roles, ramas, turnos y prompts iniciales | Cinco roles según la herramienta de cada integrante. Cada fase cierra con merge y etiqueta |
+| 2026-11-11 | Claude Code | Arquitectura y alcance para el punto de control 2 | Dejamos fuera las integraciones reales y el modelo predictivo; esas partes se simularán y lo declararemos |
 
 ## Fuentes
 

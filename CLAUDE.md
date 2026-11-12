@@ -36,6 +36,7 @@ Cada fase termina en una demo funcional. Si se acaba el tiempo, se presenta la �
 - La **bitácora de IA** del README es obligatoria. Después de cada uso relevante de IA, agregar una fila: fecha, herramienta, para qué y decisión clave.
 - **Cualquier integrante debe poder explicar cualquier parte.** Preferir código simple y legible a soluciones ingeniosas, y comentar el *por qué* donde no sea obvio.
 - Las librerías y plantillas públicas se valen, pero hay que declararlas.
+- Mientras no esté construido, el README habla en futuro ("construiremos"). Al cierre del jueves se pasa a presente las secciones "Arquitectura" y "Fuera de alcance" con lo que realmente quedó.
 
 ## Stack y convenciones
 
