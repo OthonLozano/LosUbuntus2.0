@@ -39,10 +39,10 @@ Cada fase termina en una demo funcional. Si no alcanzamos todas, la última fase
 
 | Fase | Qué se construye | Demo al terminar | Estado |
 |---|---|---|---|
-| 1. Tablero base | Contenedores del día con datos sintéticos, checklist de documentos y regla de color | Se marca un documento como faltante y el contenedor cambia de color | Pendiente |
-| 2. Estimación de tiempo | Congestión por hora (simulada a partir del promedio ITPAP), llegada estimada contra la ventana de la cita, sugerencia de reprogramar y contador de No Show evitados | Se cambia la hora de salida y el semáforo se recalcula | Pendiente |
-| 3. Revisión con IA | Carga de un PDF o una foto. La IA extrae los datos y los compara con los del viaje | Se sube un documento con un error y PORTIX lo detecta | Pendiente |
-| 4. Avisos a la agencia | Chat simulado dentro de la app. La IA interpreta la respuesta de la agencia y actualiza el estado | La agencia responde "ya quedó pagado" y el contenedor pasa a verde | Pendiente |
+| 1. Tablero base | Contenedores del día con datos sintéticos, checklist de documentos y regla de color | Se marca un documento como faltante y el contenedor cambia de color | Lista (`fase-1`) |
+| 2. Estimación de tiempo | Congestión por hora (simulada a partir del promedio ITPAP), llegada estimada contra la ventana de la cita, sugerencia de reprogramar y contador de No Show evitados | Se cambia la hora de salida y el semáforo se recalcula | Lista (`fase-2`) |
+| 3. Revisión con IA | Carga de un PDF o una foto. La IA extrae los datos y los compara con los del viaje | Se sube un documento con un error y PORTIX lo detecta | Lista (`fase-3`) |
+| 4. Avisos a la agencia | Chat simulado dentro de la app. La IA interpreta la respuesta de la agencia y actualiza el estado | La agencia responde "ya quedó pagado, al rato te paso el comprobante": el pedimento sigue pendiente hasta que se sube el comprobante y la IA lo revisa; entonces el contenedor pasa a verde | Lista (`fase-4`) |
 
 Calendario: README a las 17:00 → Fase 1 a las 20:30 → Fases 2 y 3 en la noche → Fase 4 y el giro del reto el jueves temprano → cierre a las 10:30.
 
