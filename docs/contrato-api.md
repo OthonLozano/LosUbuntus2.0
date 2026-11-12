@@ -64,9 +64,15 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
   "ventana_inicio": "09:00",
   "ventana_fin": "12:00",
   "llegada_estimada": "11:40",
-  "accion_sugerida": "Corregir carta porte y salir antes de 10:30"
+  "accion_sugerida": "Corregir carta porte y salir antes de 10:30",
+  "traslado_min": 68,
+  "congestion": "alta",
+  "estado_cita": "activa"
 }
 ```
+
+- `traslado_min` y `congestion` (F2): cuánto tarda el traslado según la congestión **simulada** de la hora de salida (45 min × 1.0, 1.3 o 1.5, redondeado hacia arriba).
+- `estado_cita` (F2): `activa`, `movida` o `cancelada`. Lo cambia `POST /reprogramar`. No hace falta ponerlo en `contenedores.json`: si no viene, vale `activa`.
 
 `color` puede ser `verde`, `amarillo` o `rojo`. Las reglas para calcularlo están en la sección 7 del plan del equipo.
 
@@ -108,9 +114,14 @@ Son la forma inicial. Quien implemente el endpoint puede ajustarla, pero tiene q
 ```json
 {
   "simulada": true,
+  "nota": "Congestión SIMULADA por hora del día...",
+  "traslado_base_min": 45,
+  "multiplicadores": { "baja": 1.0, "media": 1.3, "alta": 1.5 },
   "por_hora": { "06": "baja", "07": "baja", "08": "media", "09": "alta" }
 }
 ```
+
+La tabla vive en `backend/data/congestion.json` (de 06 a 17 h). Las horas que no aparecen se consideran `baja`.
 
 **`POST /api/contenedores/{id}/simular-salida`**: regresa el contenedor recalculado sin guardar el cambio.
 
@@ -125,6 +136,10 @@ Son la forma inicial. Quien implemente el endpoint puede ajustarla, pero tiene q
 ```
 
 `accion` puede ser `mover` o `cancelar`. Con `cancelar` no se manda `nueva_cita`.
+
+- **No Show evitado:** suma 1 al contador (y $999 a `ahorro_mxn`) solo si la cita estaba en **rojo** y se movió o canceló antes del fin de su ventana (según la hora de la demo).
+- **Mover:** además de la cita, cambia `salida_planeada` a la última hora con la que el camión llega justo a la nueva cita. Si con la hora actual ya no alcanza a llegar, responde `422` con la explicación en `detail`.
+- **Cancelar:** el contenedor queda en **amarillo** ("Solicitar una nueva cita a la terminal"), porque sigue pendiente de una cita nueva. Cancelar dos veces responde `422`.
 
 **`POST /api/contenedores/{id}/revisar-documento`**: se envía como `multipart/form-data` con un campo `archivo` (PDF, JPG o PNG). Regresa:
 
@@ -163,8 +178,8 @@ Si Gemini falla o se agota el límite gratuito, `ia.py` regresa una respuesta de
 
 Se usan los códigos de FastAPI: `404` si el contenedor no existe (o, en el PATCH, si no tiene ese documento) y `422` si el cuerpo no tiene la forma esperada. El detalle va en `{"detail": "..."}`.
 
-## Notas del backend (F1)
+## Notas del backend
 
-- Los cambios hechos con el PATCH se guardan en memoria, no en `contenedores.json`. Al reiniciar el backend, todo vuelve al estado inicial, así la demo siempre sale igual.
+- Los cambios hechos con el PATCH y con `reprogramar`, y el contador de No Show, se guardan en memoria, no en `contenedores.json`. Al reiniciar el backend, todo vuelve al estado inicial, así la demo siempre sale igual.
 - En el PATCH, `nota` es opcional; si no se manda, la nota anterior se borra.
 - La "hora actual" de la demo se configura con `PORTIX_HORA_ACTUAL` en `backend/.env` (por defecto `06:15`).

@@ -1,19 +1,22 @@
 """
-PORTIX: reglas del semáforo (sección 7 del plan del equipo, v1).
+PORTIX: reglas del semáforo (sección 7 del plan del equipo).
 
 Aquí no hay FastAPI ni archivos: solo funciones que reciben datos y regresan
-un resultado. Así se pueden probar solas y la F2 solo tiene que cambiar el
-traslado (multiplicándolo por la congestión) sin tocar las reglas.
+un resultado. main.py lee data/congestion.json y nos pasa la tabla.
 
 Reglas:
 - Ventana de la cita: de 2 h antes a 1 h después de la cita (regla de ICAVE).
-- Llegada estimada = salida planeada + traslado (45 min fijos en F1).
+- Traslado del patio al puerto: 45 min × la congestión de la hora de salida
+  (baja ×1.0, media ×1.3, alta ×1.5). La congestión por hora es SIMULADA.
+- Llegada estimada = salida planeada + traslado.
 - Verde: documentos en ok o na, y la llegada cae dentro de la ventana.
 - Amarillo: algún documento en falta o error, pero todavía hay tiempo
-  (hora actual + traslado <= fin de la ventana).
+  (todavía existe una hora de salida que llega antes del fin de la ventana).
 - Rojo: la llegada queda después del fin de la ventana, o hay documentos
   pendientes y ya no hay tiempo.
 """
+
+import math
 
 from modelos import Contenedor
 
@@ -21,8 +24,8 @@ from modelos import Contenedor
 MINUTOS_ANTES_DE_CITA = 120
 MINUTOS_DESPUES_DE_CITA = 60
 
-# Traslado del patio al puerto. En F1 es fijo; en F2 se multiplica por la
-# congestión de la hora de salida.
+# Traslado base del patio al puerto, sin congestión. Se usa tal cual si no
+# hay tabla de congestión (así funcionaba la F1).
 TRASLADO_MIN = 45
 
 # Nombres legibles para armar los textos de motivo y acción.
@@ -51,6 +54,54 @@ def a_hora(minutos: int) -> str:
     return f"{minutos // 60:02d}:{minutos % 60:02d}"
 
 
+# --- Congestión y traslado ------------------------------------------------
+
+def nivel_congestion(salida: int, congestion: dict | None) -> str:
+    """'baja', 'media' o 'alta' para la hora en que sale el camión.
+
+    La tabla usa la hora en punto ("09" cubre de 09:00 a 09:59). Las horas
+    que no están en la tabla se consideran 'baja' (está declarado en el JSON).
+    """
+    if congestion is None:
+        return "baja"
+    hora = a_hora(salida)[:2]
+    return congestion["por_hora"].get(hora, "baja")
+
+
+def traslado_min(salida: int, congestion: dict | None) -> int:
+    """Minutos de traslado si el camión sale a esa hora."""
+    if congestion is None:
+        return TRASLADO_MIN
+    base = congestion["traslado_base_min"]
+    multiplicador = congestion["multiplicadores"][nivel_congestion(salida, congestion)]
+    # Redondeamos hacia arriba (45 × 1.3 = 58.5 -> 59): es mejor estimar de
+    # más que prometer una llegada que no se cumple.
+    return math.ceil(base * multiplicador)
+
+
+def ultima_salida_para_llegar_a(limite: int, congestion: dict | None) -> int:
+    """La hora más tarde a la que puede salir y llegar a más tardar a `limite`.
+
+    Como el traslado cambia según la hora de salida, no basta con restar 45:
+    probamos minuto por minuto hacia atrás hasta encontrar una salida que llegue.
+    """
+    salida = limite
+    while salida + traslado_min(salida, congestion) > limite:
+        salida -= 1
+    return salida
+
+
+def primera_salida_para_llegar_desde(inicio: int, congestion: dict | None) -> int:
+    """La hora más temprana a la que puede salir sin llegar antes de `inicio`.
+
+    Empezamos 3 h antes (ningún traslado dura tanto) y avanzamos minuto a minuto.
+    """
+    salida = inicio - 180
+    while salida + traslado_min(salida, congestion) < inicio:
+        salida += 1
+    return salida
+
+
 # --- Reglas ---------------------------------------------------------------
 
 def documentos_pendientes(contenedor: Contenedor) -> list[str]:
@@ -63,27 +114,39 @@ def documentos_pendientes(contenedor: Contenedor) -> list[str]:
 
 
 def calcular_semaforo(
-    contenedor: Contenedor, hora_actual: str, traslado_min: int = TRASLADO_MIN
+    contenedor: Contenedor, hora_actual: str, congestion: dict | None = None
 ) -> dict:
     """Calcula el color y los campos extra que pide el contrato.
 
     hora_actual: la "hora del reloj de la demo" (por ejemplo "06:15"), para
     que la demo siempre dé el mismo resultado sin importar la hora real.
+    congestion: el contenido de data/congestion.json. Si es None, el traslado
+    es de 45 min fijos.
     """
     cita = a_minutos(contenedor.cita)
     ventana_inicio = cita - MINUTOS_ANTES_DE_CITA
     ventana_fin = cita + MINUTOS_DESPUES_DE_CITA
-    llegada = a_minutos(contenedor.salida_planeada) + traslado_min
+
+    salida = a_minutos(contenedor.salida_planeada)
+    traslado = traslado_min(salida, congestion)
+    llegada = salida + traslado
 
     # La última hora a la que el camión puede salir y todavía llegar a tiempo.
-    ultima_salida = ventana_fin - traslado_min
+    ultima_salida = ultima_salida_para_llegar_a(ventana_fin, congestion)
+    # ¿Todavía no pasa esa hora? Entonces hay tiempo de resolver lo que falte.
+    hay_tiempo = a_minutos(hora_actual) <= ultima_salida
 
     pendientes = documentos_pendientes(contenedor)
-    # ¿Si saliera ahora mismo, alcanzaría a llegar antes de que cierre la ventana?
-    hay_tiempo = a_minutos(hora_actual) + traslado_min <= ventana_fin
 
-    # El orden importa: primero lo más grave (rojo) y al final el verde.
-    if llegada > ventana_fin:
+    # El orden importa: primero los casos especiales, luego lo más grave
+    # (rojo) y al final el verde.
+    if contenedor.estado_cita == "cancelada":
+        # La cita se canceló a tiempo: el camión no sale, pero el contenedor
+        # sigue pendiente de una cita nueva. Por eso es "espera" y no "sale".
+        color = "amarillo"
+        motivo = "Cita cancelada a tiempo, sin cargo de No Show"
+        accion = "Solicitar una nueva cita a la terminal"
+    elif llegada > ventana_fin:
         color = "rojo"
         motivo = (
             f"Con salida a las {contenedor.salida_planeada} llega a las {a_hora(llegada)}, "
@@ -107,7 +170,8 @@ def calcular_semaforo(
             f"Llegaría a las {a_hora(llegada)}, antes de que abra la ventana "
             f"({a_hora(ventana_inicio)})"
         )
-        accion = f"Salir a partir de las {a_hora(ventana_inicio - traslado_min)}"
+        primera = primera_salida_para_llegar_desde(ventana_inicio, congestion)
+        accion = f"Salir a partir de las {a_hora(primera)}"
     else:
         color = "verde"
         motivo = "Documentos completos y llega dentro de la ventana de su cita"
@@ -120,4 +184,6 @@ def calcular_semaforo(
         "ventana_fin": a_hora(ventana_fin),
         "llegada_estimada": a_hora(llegada),
         "accion_sugerida": accion,
+        "traslado_min": traslado,
+        "congestion": nivel_congestion(salida, congestion),
     }

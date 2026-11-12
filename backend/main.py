@@ -19,11 +19,14 @@ from fastapi import FastAPI, HTTPException
 from modelos import (
     PATRON_HORA,
     CambioDocumento,
+    Congestion,
     Contenedor,
     ContenedorConSemaforo,
+    Reprogramar,
     Resumen,
+    SimularSalida,
 )
-from semaforo import calcular_semaforo
+from semaforo import a_hora, a_minutos, calcular_semaforo, ultima_salida_para_llegar_a
 
 # Lee backend/.env (si existe) y deja sus valores en os.environ.
 # Así nadie escribe la API key en el código.
@@ -37,7 +40,9 @@ app = FastAPI(title="PORTIX API")
 # en memoria. Los cambios (PATCH) NO se escriben de vuelta al archivo: al
 # reiniciar el servidor, la demo vuelve a su estado inicial y siempre sale igual.
 
-ARCHIVO_CONTENEDORES = Path(__file__).parent / "data" / "contenedores.json"
+CARPETA_DATOS = Path(__file__).parent / "data"
+ARCHIVO_CONTENEDORES = CARPETA_DATOS / "contenedores.json"
+ARCHIVO_CONGESTION = CARPETA_DATOS / "congestion.json"
 
 
 def cargar_contenedores() -> dict[str, Contenedor]:
@@ -51,10 +56,23 @@ def cargar_contenedores() -> dict[str, Contenedor]:
     return {c["id"]: Contenedor(**c) for c in datos}
 
 
-contenedores = cargar_contenedores()
+def cargar_congestion() -> dict:
+    """Lee la tabla de congestión SIMULADA por hora (F2).
 
-# Contador de No Show evitados. En F1 siempre es 0; lo incrementa
-# POST /reprogramar en la F2.
+    La validamos con el modelo Congestion para que un error en el JSON se
+    note al arrancar, pero la guardamos como dict porque así la usa semaforo.py.
+    """
+    with open(ARCHIVO_CONGESTION, encoding="utf-8") as archivo:
+        datos = json.load(archivo)
+    return Congestion(**datos).model_dump()
+
+
+contenedores = cargar_contenedores()
+congestion = cargar_congestion()
+
+# Contador de No Show evitados. Lo incrementa POST /reprogramar cuando se
+# mueve o cancela a tiempo una cita que estaba en rojo. Vive en memoria,
+# igual que los contenedores: al reiniciar el backend vuelve a 0.
 no_show_evitados = 0
 CARGO_NO_SHOW_MXN = 999  # ICAVE, aviso ICA-2025-009
 
@@ -77,7 +95,7 @@ def hora_actual() -> str:
 
 def con_semaforo(contenedor: Contenedor) -> ContenedorConSemaforo:
     """Junta los datos guardados del contenedor con los campos calculados."""
-    calculado = calcular_semaforo(contenedor, hora_actual())
+    calculado = calcular_semaforo(contenedor, hora_actual(), congestion)
     return ContenedorConSemaforo(**contenedor.model_dump(), **calculado)
 
 
@@ -131,6 +149,62 @@ def cambiar_documento(id: str, cambio: CambioDocumento):
         status_code=404,
         detail=f"El contenedor '{id}' no tiene el documento '{cambio.tipo}'",
     )
+
+
+@app.get("/api/congestion", response_model=Congestion)
+def ver_congestion():
+    """La tabla de congestión por hora. Es SIMULADA y así lo indica."""
+    return congestion
+
+
+@app.post("/api/contenedores/{id}/simular-salida", response_model=ContenedorConSemaforo)
+def simular_salida(id: str, cuerpo: SimularSalida):
+    """Recalcula el semáforo con otra hora de salida, SIN guardar el cambio.
+
+    Sirve para que el despachador pruebe "¿y si sale a las 09:15?".
+    """
+    contenedor = buscar(id)
+    # model_copy hace una copia: el contenedor guardado no cambia.
+    prueba = contenedor.model_copy(update={"salida_planeada": cuerpo.salida_planeada})
+    return con_semaforo(prueba)
+
+
+@app.post("/api/contenedores/{id}/reprogramar", response_model=ContenedorConSemaforo)
+def reprogramar(id: str, cuerpo: Reprogramar):
+    """Mueve o cancela la cita. Si estaba en rojo y se hace a tiempo, suma un No Show evitado."""
+    global no_show_evitados  # el contador vive fuera de la función
+
+    contenedor = buscar(id)
+    antes = con_semaforo(contenedor)
+
+    if cuerpo.accion == "cancelar":
+        if contenedor.estado_cita == "cancelada":
+            raise HTTPException(status_code=422, detail="La cita ya estaba cancelada")
+        contenedor.estado_cita = "cancelada"
+    else:  # mover
+        if cuerpo.nueva_cita is None:
+            raise HTTPException(status_code=422, detail="Para mover la cita hay que mandar nueva_cita")
+        # Al mover la cita también movemos la salida: la ponemos a la última
+        # hora con la que el camión llega justo a la hora de la nueva cita.
+        nueva_salida = ultima_salida_para_llegar_a(a_minutos(cuerpo.nueva_cita), congestion)
+        if nueva_salida < a_minutos(hora_actual()):
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Son las {hora_actual()}: ya no alcanza a llegar a una cita "
+                    f"a las {cuerpo.nueva_cita}. Elige una cita más tarde."
+                ),
+            )
+        contenedor.cita = cuerpo.nueva_cita
+        contenedor.salida_planeada = a_hora(nueva_salida)
+        contenedor.estado_cita = "movida"
+
+    # Regla de la sección 7: cuenta como No Show evitado si la cita estaba en
+    # rojo y se movió o canceló antes de que cerrara su ventana.
+    if antes.color == "rojo" and a_minutos(hora_actual()) <= a_minutos(antes.ventana_fin):
+        no_show_evitados += 1
+
+    return con_semaforo(contenedor)
 
 
 @app.get("/api/resumen", response_model=Resumen)
