@@ -668,9 +668,15 @@ button:focus-visible, select:focus-visible {
   overflow-y: auto;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
-.modal__encabezado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.modal__encabezado h2 { font-size: 1.1rem; }
+/* La caja es "relative" para poder poner la X en la esquina. */
+.modal__caja { position: relative; }
+/* El formulario de Othon trae su propia caja con borde; dentro de la ventana se
+   la quitamos para que no se vea una caja dentro de otra. */
+.modal__caja .formulario { border: none; padding: 0; max-width: none; }
 .modal__cerrar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
   font-size: 1.5rem;
   line-height: 1;
   background: none;

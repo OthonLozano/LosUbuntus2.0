@@ -63,7 +63,7 @@ export default function VistaPanel({
       </main>
 
       {agregando && (
-        <Modal titulo="Agregar contenedor" onCerrar={() => setAgregando(false)}>
+        <Modal etiqueta="Agregar contenedor" onCerrar={() => setAgregando(false)}>
           {/* El formulario es de Othon; aquí solo lo mostramos. */}
           <AgregarContenedor
             onCreado={async (c) => {
@@ -79,7 +79,9 @@ export default function VistaPanel({
 }
 
 // Ventana encima de la página. Se cierra con la X, con Escape o al dar clic afuera.
-function Modal({ titulo, onCerrar, children }) {
+// No pone título propio: el formulario de adentro ya trae el suyo. `etiqueta` es el
+// nombre que leen los lectores de pantalla.
+function Modal({ etiqueta, onCerrar, children }) {
   useEffect(() => {
     const alTeclear = (e) => e.key === 'Escape' && onCerrar()
     window.addEventListener('keydown', alTeclear)
@@ -92,16 +94,13 @@ function Modal({ titulo, onCerrar, children }) {
         className="modal__caja"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-titulo"
+        aria-label={etiqueta}
         // El clic dentro de la caja no debe cerrarla.
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal__encabezado">
-          <h2 id="modal-titulo">{titulo}</h2>
-          <button type="button" className="modal__cerrar" onClick={onCerrar} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
+        <button type="button" className="modal__cerrar" onClick={onCerrar} aria-label="Cerrar">
+          ×
+        </button>
         {children}
       </div>
     </div>
