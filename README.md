@@ -95,7 +95,30 @@ En esta versión no construiremos:
 
 ## Cómo correrlo
 
-Pendiente.
+Requisitos: Python 3.11 o más reciente y Node 20 o más reciente.
+
+**Backend** (en una terminal, desde `backend/`):
+
+```
+python -m venv .venv
+.venv\Scripts\activate          # en Mac o Linux: source .venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env          # en Mac o Linux: cp .env.example .env
+uvicorn main:app --reload
+```
+
+Después pon tu key de Gemini en `backend/.env`. Para comprobar que funciona, abre http://localhost:8000/api/salud.
+
+**Frontend** (en otra terminal, desde `frontend/`):
+
+```
+npm install
+npm run dev
+```
+
+Abre http://localhost:5173. Las llamadas a `/api` se mandan al backend en el puerto 8000.
+
+El contrato entre el frontend y el backend está en [docs/contrato-api.md](docs/contrato-api.md).
 
 ## Bitácora de IA
 
@@ -110,6 +133,7 @@ Pendiente.
 | 2026-11-11 | Claude Code + búsqueda web | Comparar APIs de IA gratuitas (Grok, Gemini, Groq) | Gemini: tiene plan gratuito y lee imágenes y PDFs. Groq queda como respaldo para texto |
 | 2026-11-11 | Claude Code | Plan de trabajo del equipo: roles, ramas, turnos y prompts iniciales | Cinco roles según la herramienta de cada integrante. Cada fase cierra con merge y etiqueta |
 | 2026-11-11 | Claude Code | Arquitectura y alcance para el punto de control 2 | Dejamos fuera las integraciones reales y el modelo predictivo; esas partes se simularán y lo declararemos |
+| 2026-11-11 | Claude Code | Estructura base (F0): FastAPI, Vite + React y contrato de la API | Frontend mínimo escrito a mano, sin el boilerplate de la plantilla. Vite reenvía `/api` al backend, así que no hace falta CORS |
 
 ## Fuentes
 
