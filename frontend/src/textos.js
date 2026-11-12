@@ -31,3 +31,22 @@ export const TIPOS_CARGA = {
   isotanque: 'Isotanque',
   sobredimensionada: 'Sobredimensionada',
 }
+
+// F2: niveles de congestión (simulada) y estado de la cita.
+export const CONGESTION = {
+  baja: 'Baja',
+  media: 'Media',
+  alta: 'Alta',
+}
+
+export const ESTADO_CITA = {
+  activa: 'Activa',
+  movida: 'Cita movida',
+  cancelada: 'Cita cancelada',
+}
+
+// Cargo por No Show en ICAVE (aviso ICA-2025-009).
+export const CARGO_NO_SHOW = 999
+
+export const formatoPesos = (n) =>
+  n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })

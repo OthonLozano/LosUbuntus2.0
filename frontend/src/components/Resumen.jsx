@@ -1,8 +1,8 @@
-import { SEMAFORO } from '../textos.js'
+import { SEMAFORO, formatoPesos } from '../textos.js'
 
-// Conteo por color. Se calcula con la misma lista que se muestra,
-// así el resumen y la tabla siempre coinciden.
-export default function Resumen({ contenedores }) {
+// Conteo por color (de la misma lista que muestra la tabla, así siempre coinciden)
+// y el contador de No Show evitados que lleva el backend (GET /api/resumen).
+export default function Resumen({ contenedores, noShow }) {
   const contar = (color) => contenedores.filter((c) => c.color === color).length
 
   return (
@@ -16,6 +16,13 @@ export default function Resumen({ contenedores }) {
           </span>
         </div>
       ))}
+      <div className="resumen__tarjeta resumen__tarjeta--noshow">
+        <span className="resumen__numero">{noShow?.no_show_evitados ?? 0}</span>
+        <span className="resumen__bloque">
+          <span className="resumen__texto">No Show evitados</span>
+          <span className="resumen__ahorro">{formatoPesos(noShow?.ahorro_mxn ?? 0)} ahorrados</span>
+        </span>
+      </div>
     </section>
   )
 }

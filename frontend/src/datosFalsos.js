@@ -7,7 +7,6 @@
 
 // Reloj de la demo (sección 7): la "hora actual" es fija para que la demo siempre salga igual.
 const HORA_DEMO = '06:15'
-const TRASLADO_MIN = 45 // F1: traslado fijo del patio al puerto
 
 let contenedores = [
   {
@@ -108,9 +107,25 @@ let contenedores = [
   },
 ]
 
+// ---------- Congestión simulada (sección 7 del plan) ----------
+// Igual que backend/data/congestion.json. Es un supuesto del equipo, no un dato real.
+
+const CONGESTION = {
+  simulada: true,
+  nota: 'Congestión SIMULADA por hora del día. El ITPAP de T21 solo publica un promedio mensual; esta tabla es un supuesto del equipo para la demo.',
+  traslado_base_min: 45,
+  multiplicadores: { baja: 1.0, media: 1.3, alta: 1.5 },
+  por_hora: {
+    '06': 'baja', '07': 'baja', '08': 'media', '09': 'alta', '10': 'alta', '11': 'alta',
+    '12': 'media', '13': 'media', '14': 'baja', '15': 'baja', '16': 'baja', '17': 'media',
+  },
+}
+
+let noShowEvitados = 0
+
 // ---------- Semáforo simulado ----------
-// Copia simple de las reglas de la sección 7, solo para que los datos falsos
-// cambien de color. Con la API real, el color lo calcula el backend (semaforo.py).
+// Copia simple de las reglas de backend/semaforo.py, solo para que los datos falsos
+// cambien de color. Con la API real, el color lo calcula el backend.
 
 const NOMBRES_DOC = {
   pedimento: 'pedimento',
@@ -126,71 +141,65 @@ function aMinutos(hora) {
 }
 
 function aHora(minutos) {
-  const h = String(Math.floor(minutos / 60)).padStart(2, '0')
-  const m = String(minutos % 60).padStart(2, '0')
+  const total = ((minutos % 1440) + 1440) % 1440
+  const h = String(Math.floor(total / 60)).padStart(2, '0')
+  const m = String(total % 60).padStart(2, '0')
   return `${h}:${m}`
+}
+
+function nivelCongestion(salida) {
+  const hora = String(Math.floor(salida / 60)).padStart(2, '0')
+  return CONGESTION.por_hora[hora] || 'baja'
+}
+
+function trasladoMin(salida) {
+  return Math.ceil(CONGESTION.traslado_base_min * CONGESTION.multiplicadores[nivelCongestion(salida)])
+}
+
+// La salida más tarde con la que el camión llega a más tardar a `limite`.
+function ultimaSalidaPara(limite) {
+  let salida = limite
+  while (salida > 0 && salida + trasladoMin(salida) > limite) salida -= 1
+  return salida
 }
 
 function calcularSemaforo(c) {
   const cita = aMinutos(c.cita)
   const inicio = cita - 120 // la ventana abre 2 h antes de la cita
   const fin = cita + 60 // y cierra 1 h después
-  const llegada = aMinutos(c.salida_planeada) + TRASLADO_MIN
+  const salida = aMinutos(c.salida_planeada)
+  const traslado = trasladoMin(salida)
+  const llegada = salida + traslado
   const ahora = aMinutos(HORA_DEMO)
   const pendientes = c.documentos.filter((d) => d.estado === 'falta' || d.estado === 'error')
+  const nombres = pendientes.map((d) => NOMBRES_DOC[d.tipo]).join(', ')
 
   const base = {
     ventana_inicio: aHora(inicio),
     ventana_fin: aHora(fin),
     llegada_estimada: aHora(llegada),
+    traslado_min: traslado,
+    congestion: nivelCongestion(salida),
+    estado_cita: c.estado_cita || 'activa',
   }
+  const reprogramarTexto = `Mover o cancelar la cita antes de las ${aHora(fin)} para evitar el No Show`
 
+  if (c.estado_cita === 'cancelada') {
+    return { ...base, color: 'amarillo', motivo: 'Cita cancelada a tiempo, sin cargo de No Show', accion_sugerida: 'Solicitar una nueva cita a la terminal' }
+  }
   if (llegada > fin) {
-    return {
-      ...base,
-      color: 'rojo',
-      motivo: `Llegaría a las ${aHora(llegada)}, después del cierre de la ventana (${aHora(fin)})`,
-      accion_sugerida: `Mover o cancelar la cita antes de las ${aHora(fin)} para evitar el No Show`,
-    }
+    return { ...base, color: 'rojo', motivo: `Con salida a las ${c.salida_planeada} llega a las ${aHora(llegada)}, después del cierre de la ventana (${aHora(fin)})`, accion_sugerida: reprogramarTexto }
   }
-
+  if (pendientes.length > 0 && ahora + trasladoMin(ahora) > fin) {
+    return { ...base, color: 'rojo', motivo: `Falta resolver: ${nombres}, y ya no alcanza a llegar a la ventana`, accion_sugerida: reprogramarTexto }
+  }
   if (pendientes.length > 0) {
-    const nombres = pendientes.map((d) => NOMBRES_DOC[d.tipo]).join(', ')
-    const motivo = pendientes
-      .map((d) => (d.estado === 'error' ? `Error en ${NOMBRES_DOC[d.tipo]}` : `Falta ${NOMBRES_DOC[d.tipo]}`) + (d.nota ? `: ${d.nota}` : ''))
-      .join(' · ')
-
-    if (ahora + TRASLADO_MIN <= fin) {
-      return {
-        ...base,
-        color: 'amarillo',
-        motivo,
-        accion_sugerida: `Resolver ${nombres} y salir antes de las ${aHora(fin - TRASLADO_MIN)}`,
-      }
-    }
-    return {
-      ...base,
-      color: 'rojo',
-      motivo: `${motivo}. Ya no hay tiempo de resolverlo`,
-      accion_sugerida: `Mover o cancelar la cita antes de las ${aHora(fin)} para evitar el No Show`,
-    }
+    return { ...base, color: 'amarillo', motivo: `Falta resolver: ${nombres}`, accion_sugerida: `Resolver ${nombres} y salir a más tardar a las ${aHora(ultimaSalidaPara(fin))}` }
   }
-
   if (llegada < inicio) {
-    return {
-      ...base,
-      color: 'amarillo',
-      motivo: `Llegaría a las ${aHora(llegada)}, antes de que abra la ventana (${aHora(inicio)})`,
-      accion_sugerida: `Retrasar la salida a las ${aHora(inicio - TRASLADO_MIN)} o después`,
-    }
+    return { ...base, color: 'amarillo', motivo: `Llegaría a las ${aHora(llegada)}, antes de que abra la ventana (${aHora(inicio)})`, accion_sugerida: `Salir más tarde para llegar después de las ${aHora(inicio)}` }
   }
-
-  return {
-    ...base,
-    color: 'verde',
-    motivo: 'Documentos completos y llega dentro de la ventana',
-    accion_sugerida: `Puede salir a las ${c.salida_planeada}`,
-  }
+  return { ...base, color: 'verde', motivo: 'Documentos completos y llega dentro de la ventana de su cita', accion_sugerida: `Salir a las ${c.salida_planeada}` }
 }
 
 // ---------- Endpoints simulados ----------
@@ -198,6 +207,12 @@ function calcularSemaforo(c) {
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 const conColor = (c) => ({ ...structuredClone(c), ...calcularSemaforo(c) })
+
+function buscar(id) {
+  const c = contenedores.find((x) => x.id === id)
+  if (!c) throw new Error(`No existe el contenedor '${id}'`)
+  return c
+}
 
 // GET /api/contenedores
 export async function listarContenedores() {
@@ -208,13 +223,51 @@ export async function listarContenedores() {
 // PATCH /api/contenedores/{id}/documentos
 export async function cambiarDocumento(id, cambio) {
   await esperar(300)
-  const c = contenedores.find((x) => x.id === id)
-  if (!c) throw new Error(`No existe el contenedor ${id}`)
+  const c = buscar(id)
   const doc = c.documentos.find((d) => d.tipo === cambio.tipo)
   if (!doc) throw new Error(`El contenedor no tiene el documento ${cambio.tipo}`)
   doc.estado = cambio.estado
-  if (cambio.nota !== undefined) doc.nota = cambio.nota
+  doc.nota = cambio.nota || ''
   return conColor(c)
 }
 
-export const horaDemo = HORA_DEMO
+// GET /api/resumen
+export async function obtenerResumen() {
+  await esperar(100)
+  const conteo = { verde: 0, amarillo: 0, rojo: 0 }
+  contenedores.forEach((c) => (conteo[calcularSemaforo(c).color] += 1))
+  return { ...conteo, no_show_evitados: noShowEvitados, ahorro_mxn: noShowEvitados * 999 }
+}
+
+// GET /api/congestion
+export async function obtenerCongestion() {
+  await esperar(100)
+  return structuredClone(CONGESTION)
+}
+
+// POST /api/contenedores/{id}/simular-salida (no guarda)
+export async function simularSalida(id, salida) {
+  await esperar(200)
+  return conColor({ ...buscar(id), salida_planeada: salida })
+}
+
+// POST /api/contenedores/{id}/reprogramar
+export async function reprogramar(id, cuerpo) {
+  await esperar(300)
+  const c = buscar(id)
+  const antes = calcularSemaforo(c)
+  if (cuerpo.accion === 'cancelar') {
+    if (c.estado_cita === 'cancelada') throw new Error('La cita ya estaba cancelada')
+    c.estado_cita = 'cancelada'
+  } else {
+    const nuevaSalida = ultimaSalidaPara(aMinutos(cuerpo.nueva_cita))
+    if (nuevaSalida < aMinutos(HORA_DEMO)) {
+      throw new Error(`Son las ${HORA_DEMO}: ya no alcanza a llegar a una cita a las ${cuerpo.nueva_cita}. Elige una cita más tarde.`)
+    }
+    c.cita = cuerpo.nueva_cita
+    c.salida_planeada = aHora(nuevaSalida)
+    c.estado_cita = 'movida'
+  }
+  if (antes.color === 'rojo' && aMinutos(HORA_DEMO) <= aMinutos(antes.ventana_fin)) noShowEvitados += 1
+  return conColor(c)
+}
