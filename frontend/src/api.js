@@ -87,3 +87,18 @@ export async function revisarDocumento(id, archivo, documento) {
   // Sin 'Content-Type' a mano: el navegador lo pone solo (con el "boundary" que separa los campos).
   return pedir(`${urlContenedor(id)}/revisar-documento`, { method: 'POST', body: datos })
 }
+
+// F4 · GET /api/contenedores/{id}/chat → { mensajes: [{ de, texto, hora }] }
+// El chat es SIMULADO: en la demo alguien del equipo escribe como si fuera la agencia.
+export async function obtenerChat(id) {
+  if (USAR_DATOS_FALSOS) return falsos.obtenerChat(id)
+  return pedir(`${urlContenedor(id)}/chat`)
+}
+
+// F4 · POST /api/contenedores/{id}/chat
+// cuerpo: { "texto": "Ya quedó pagado el pedimento" }
+// Regresa { interpretacion, respaldo, documento_actualizado, contenedor, mensajes }
+export async function enviarMensajeAgencia(id, texto) {
+  if (USAR_DATOS_FALSOS) return falsos.enviarMensajeAgencia(id, texto)
+  return pedir(`${urlContenedor(id)}/chat`, enviarJson('POST', { texto }))
+}

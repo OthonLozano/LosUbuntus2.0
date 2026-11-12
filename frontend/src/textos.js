@@ -63,6 +63,22 @@ export const TIPOS_DOCUMENTO = {
   otro: 'Otro documento',
 }
 
+// F4: qué tan segura está la IA de lo que entendió en el chat.
+// Con confianza baja el backend no cambia el checklist.
+export const CONFIANZA = {
+  alta: 'Alta',
+  media: 'Media',
+  baja: 'Baja (no se cambia nada; revisar a mano)',
+}
+
+// F4: estados que puede proponer la IA (los del checklist más "sin_cambio").
+export const ESTADOS_CHAT = {
+  ok: 'Listo',
+  falta: 'Falta',
+  error: 'Con error',
+  sin_cambio: 'Sin cambio',
+}
+
 // Cargo por No Show en ICAVE (aviso ICA-2025-009).
 export const CARGO_NO_SHOW = 999
 

@@ -4,6 +4,7 @@ import BarraVentana from './BarraVentana.jsx'
 import SimularSalida from './SimularSalida.jsx'
 import Reprogramar from './Reprogramar.jsx'
 import SubirDocumento from './SubirDocumento.jsx'
+import ChatAgencia from './ChatAgencia.jsx'
 import { CONGESTION, DOCUMENTOS, ESTADO_CITA, ESTADOS_DOC, TIPOS_CARGA } from '../textos.js'
 
 // App le pone una key con el id, la cita y la salida: al cambiar de contenedor
@@ -119,6 +120,9 @@ export default function PanelDetalle({
       </ul>
 
       <SubirDocumento contenedor={c} onRevisado={onDocumentoRevisado} />
+
+      {/* Al terminar también basta con volver a pedir la lista, igual que en F3. */}
+      <ChatAgencia contenedor={c} onActualizado={onDocumentoRevisado} />
 
       <p className="detalle__estado" aria-live="polite">
         {guardando && 'Guardando y recalculando el color...'}

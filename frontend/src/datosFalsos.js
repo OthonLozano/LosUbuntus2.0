@@ -306,3 +306,74 @@ export async function revisarDocumento(id, archivo, documento) {
     contenedor: conColor(c),
   }
 }
+
+// ---------- F4: chat con la agencia (simulado) ----------
+// Copia simple de backend/main.py y del respaldo de backend/ia.py:
+// busca palabras clave en lugar de usar la IA. Siempre va marcado como respaldo.
+
+const conversaciones = {}
+
+function historial(c) {
+  if (!conversaciones[c.id]) {
+    const pendientes = c.documentos.filter((d) => d.estado === 'falta' || d.estado === 'error')
+    const texto = pendientes.length
+      ? `Aviso de PORTIX sobre el contenedor ${c.id} (cita ${c.cita}): falta resolver ${pendientes
+          .map((d) => `${NOMBRES_DOC[d.tipo]} (${d.nota || d.estado})`)
+          .join('; ')}. ¿Nos confirman cuando quede?`
+      : `El contenedor ${c.id} tiene todos sus documentos completos.`
+    conversaciones[c.id] = [{ de: 'portix', texto, hora: HORA_DEMO }]
+  }
+  return conversaciones[c.id]
+}
+
+// GET /api/contenedores/{id}/chat
+export async function obtenerChat(id) {
+  await esperar(150)
+  return { mensajes: structuredClone(historial(buscar(id))) }
+}
+
+// POST /api/contenedores/{id}/chat
+export async function enviarMensajeAgencia(id, texto) {
+  await esperar(1200) // la IA real tarda unos segundos
+  const c = buscar(id)
+  const mensajes = historial(c)
+  mensajes.push({ de: 'agencia', texto, hora: HORA_DEMO })
+
+  // Interpretación por palabras clave (igual que _respaldo_mensaje en ia.py).
+  const t = texto.toLowerCase()
+  const pendientes = c.documentos.filter((d) => d.estado === 'falta' || d.estado === 'error')
+  let documento = null
+  if (t.includes('pedimento')) documento = 'pedimento'
+  else if (t.includes('carta porte')) documento = 'carta_porte'
+  else if (t.includes('cita') || t.includes('folio')) documento = 'folio_cita'
+  else if (pendientes.length === 1) documento = pendientes[0].tipo
+  const confirma = /pagad|pagó|pago|listo|ya qued|ya est/.test(t)
+  const pendiente = t.includes('comprobante') ? 'comprobante' : ''
+
+  const interpretacion =
+    documento && confirma
+      ? { documento, nuevo_estado: 'ok', pendiente, resumen: `Respuesta de respaldo: la agencia confirma ${NOMBRES_DOC[documento]}.`, confianza: 'media' }
+      : { documento: 'ninguno', nuevo_estado: 'sin_cambio', pendiente, resumen: 'Respuesta de respaldo: no se pudo identificar qué documento confirma la agencia.', confianza: 'baja' }
+  interpretacion.respaldo = true
+  interpretacion.motivo_respaldo = 'Datos de prueba: el backend no está conectado'
+
+  // Igual que el backend: si confirman pero aún deben mandar algo, sigue en "falta".
+  const renglon = interpretacion.documento !== 'ninguno' ? c.documentos.find((d) => d.tipo === interpretacion.documento) : null
+  if (renglon) {
+    renglon.estado = pendiente ? 'falta' : 'ok'
+    renglon.nota = `Agencia ${HORA_DEMO}: ${interpretacion.resumen}${pendiente ? ` Pendiente: ${pendiente}.` : ''}`
+  }
+  const actualizado = conColor(c)
+  const efecto = renglon
+    ? `${NOMBRES_DOC[renglon.tipo]} queda como '${renglon.estado === 'ok' ? 'listo' : 'falta'}'. El contenedor está en ${actualizado.color}.`
+    : 'No cambió ningún documento; si hace falta, ajústalo a mano en el checklist.'
+  mensajes.push({ de: 'portix', texto: `${interpretacion.resumen} ${efecto}`, hora: HORA_DEMO })
+
+  return {
+    interpretacion,
+    respaldo: true,
+    documento_actualizado: renglon ? renglon.tipo : null,
+    contenedor: actualizado,
+    mensajes: structuredClone(mensajes),
+  }
+}
