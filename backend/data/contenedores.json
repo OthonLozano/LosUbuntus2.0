@@ -1,0 +1,326 @@
+[
+  {
+    "id": "LTSU 402219-9",
+    "tipo_carga": "general",
+    "terminal": "ICAVE",
+    "cita": "09:00",
+    "operador": "L. Ramírez",
+    "placas": "52-AM-9F",
+    "salida_planeada": "08:00",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "na",
+        "nota": "No aplica"
+      }
+    ]
+  },
+  {
+    "id": "MSKU 715384-0",
+    "tipo_carga": "imo",
+    "terminal": "CICE",
+    "cita": "10:30",
+    "operador": "J. Pérez",
+    "placas": "47-BK-2D",
+    "salida_planeada": "10:45",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "ok",
+        "nota": "Hoja de seguridad vigente"
+      }
+    ]
+  },
+  {
+    "id": "TCLU 930571-3",
+    "tipo_carga": "isotanque",
+    "terminal": "ICAVE",
+    "cita": "12:00",
+    "operador": "M. Torres",
+    "placas": "61-CD-7H",
+    "salida_planeada": "11:00",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "ok",
+        "nota": "Certificado de limpieza vigente"
+      }
+    ]
+  },
+  {
+    "id": "HLXU 286940-1",
+    "tipo_carga": "general",
+    "terminal": "CICE",
+    "cita": "11:00",
+    "operador": "A. Gómez",
+    "placas": "33-EF-4K",
+    "salida_planeada": "10:30",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "error",
+        "nota": "Placas no coinciden"
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "na",
+        "nota": "No aplica"
+      }
+    ]
+  },
+  {
+    "id": "CMAU 558102-6",
+    "tipo_carga": "imo",
+    "terminal": "ICAVE",
+    "cita": "08:30",
+    "operador": "R. Cruz",
+    "placas": "74-GH-1M",
+    "salida_planeada": "07:45",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "falta",
+        "nota": "Falta hoja de seguridad"
+      }
+    ]
+  },
+  {
+    "id": "OOLU 649377-1",
+    "tipo_carga": "sobredimensionada",
+    "terminal": "CICE",
+    "cita": "12:30",
+    "operador": "D. Vega",
+    "placas": "28-JK-8P",
+    "salida_planeada": "11:15",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "falta",
+        "nota": "Falta permiso de sobredimensión"
+      }
+    ]
+  },
+  {
+    "id": "TGHU 174826-8",
+    "tipo_carga": "general",
+    "terminal": "ICAVE",
+    "cita": "08:00",
+    "operador": "S. Luna",
+    "placas": "85-LM-5R",
+    "salida_planeada": "08:45",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "na",
+        "nota": "No aplica"
+      }
+    ]
+  },
+  {
+    "id": "SEGU 832065-3",
+    "tipo_carga": "isotanque",
+    "terminal": "CICE",
+    "cita": "09:30",
+    "operador": "E. Soto",
+    "placas": "19-NP-3T",
+    "salida_planeada": "10:15",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "falta",
+        "nota": "Falta folio de cita"
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "ok",
+        "nota": ""
+      }
+    ]
+  },
+  {
+    "id": "BMOU 491738-7",
+    "tipo_carga": "sobredimensionada",
+    "terminal": "ICAVE",
+    "cita": "13:00",
+    "operador": "H. Mora",
+    "placas": "96-QR-6V",
+    "salida_planeada": "13:30",
+    "documentos": [
+      {
+        "tipo": "pedimento",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "carta_porte",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "folio_cita",
+        "estado": "ok",
+        "nota": ""
+      },
+      {
+        "tipo": "operador_placas",
+        "estado": "error",
+        "nota": "Operador no corresponde a las placas"
+      },
+      {
+        "tipo": "requisito_carga",
+        "estado": "ok",
+        "nota": ""
+      }
+    ]
+  }
+]
