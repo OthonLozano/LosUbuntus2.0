@@ -9,6 +9,7 @@ misma forma.
 Funciones públicas:
 - revisar_documento(): lee un PDF o una foto y lo compara con los datos del viaje.
 - interpretar_mensaje(): entiende lo que contesta la agencia aduanal por chat.
+- extraer_datos_viaje(): lee una carta porte para llenar el formulario de un contenedor nuevo (F5).
 
 Respaldo: si no hay API key, si Gemini falla o si se agota el límite gratuito,
 las funciones NO truenan. Regresan una "respuesta de respaldo" con
@@ -294,3 +295,71 @@ def _respaldo_mensaje(texto: str, pendientes: list[str], error: Exception) -> di
         "respaldo": True,
         "motivo_respaldo": str(error)[:200],
     }
+
+
+# --- 3. Extraer los datos de un viaje nuevo (F5) -----------------------------
+
+class DatosViaje(BaseModel):
+    contenedor: str  # tal como aparece en el documento; "" si no aparece
+    operador: str
+    placas: str
+    terminal: Literal["ICAVE", "CICE", "desconocida"]
+
+
+INSTRUCCIONES_EXTRAER = """Eres un asistente de una transportista en el puerto de Veracruz.
+Te dan una carta porte (PDF o foto). Extrae SOLO estos datos del viaje:
+- contenedor: número de contenedor (4 letras y 7 dígitos, por ejemplo "MSKU 715384-0").
+- operador: nombre del operador o chofer.
+- placas: placas del tractocamión.
+- terminal: "ICAVE" o "CICE" si el documento la menciona; si no, "desconocida".
+
+Reglas:
+- Si un dato no aparece o no se lee, deja el texto vacío "". No inventes nada.
+- Copia los datos tal como aparecen; no los corrijas."""
+
+
+def _formato_contenedor(texto: str) -> str:
+    """'msku7153840' o 'MSKU 715384 0' -> 'MSKU 715384-0'. Si no se puede, lo deja igual.
+
+    El modelo puede copiar el número con otros espacios o guiones; lo pasamos
+    al formato que valida el backend para que el formulario no lo rechace.
+    """
+    limpio = re.sub(r"[^A-Za-z0-9]", "", texto).upper()
+    if re.fullmatch(r"[A-Z]{4}\d{7}", limpio):
+        return f"{limpio[:4]} {limpio[4:10]}-{limpio[10]}"
+    return texto.strip().upper()
+
+
+def extraer_datos_viaje(contenido: bytes, mime_type: str) -> dict:
+    """Lee una carta porte y regresa los datos para llenar el formulario.
+
+    No guarda nada: el despachador revisa los datos antes de agregar el contenedor.
+    Regresa {id, operador, placas, terminal, respaldo} (terminal puede ser None).
+    """
+    try:
+        from google.genai import types
+
+        archivo = types.Part.from_bytes(data=contenido, mime_type=mime_type)
+        resultado = _pedir_json(
+            [archivo, "Extrae los datos del viaje de este documento."],
+            DatosViaje,
+            INSTRUCCIONES_EXTRAER,
+        )
+        return {
+            "id": _formato_contenedor(resultado.contenedor) if resultado.contenedor else "",
+            "operador": resultado.operador.strip(),
+            "placas": resultado.placas.strip().upper(),
+            "terminal": None if resultado.terminal == "desconocida" else resultado.terminal,
+            "respaldo": False,
+        }
+    except Exception as error:
+        # Respaldo honesto: sin IA no podemos leer el archivo, así que NO
+        # llenamos datos de ejemplo. El formulario se llena a mano.
+        return {
+            "id": "",
+            "operador": "",
+            "placas": "",
+            "terminal": None,
+            "respaldo": True,
+            "motivo_respaldo": str(error)[:200],
+        }

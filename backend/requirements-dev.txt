@@ -1,0 +1,5 @@
+# Dependencias para desarrollo y pruebas (no se instalan en el despliegue).
+# Uso, desde backend/:  pip install -r requirements-dev.txt  y luego  pytest
+-r requirements.txt
+pytest==8.3.4
+httpx==0.28.1

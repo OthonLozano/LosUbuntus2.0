@@ -1,5 +1,5 @@
 """
-PORTIX: reglas del semáforo (sección 7 del plan del equipo).
+PORTIX: reglas del semáforo (sección 7 del plan del equipo, corregida en la F5).
 
 Aquí no hay FastAPI ni archivos: solo funciones que reciben datos y regresan
 un resultado. main.py lee data/congestion.json y nos pasa la tabla.
@@ -8,12 +8,25 @@ Reglas:
 - Ventana de la cita: de 2 h antes a 1 h después de la cita (regla de ICAVE).
 - Traslado del patio al puerto: 45 min × la congestión de la hora de salida
   (baja ×1.0, media ×1.3, alta ×1.5). La congestión por hora es SIMULADA.
-- Llegada estimada = salida planeada + traslado.
-- Verde: documentos en ok o na, y la llegada cae dentro de la ventana.
-- Amarillo: algún documento en falta o error, pero todavía hay tiempo
-  (todavía existe una hora de salida que llega antes del fin de la ventana).
-- Rojo: la llegada queda después del fin de la ventana, o hay documentos
-  pendientes y ya no hay tiempo.
+- Salida efectiva: la salida planeada, o la hora actual si la planeada ya pasó
+  (todos los camiones del tablero siguen en el patio; si ya era su hora y no
+  salió, lo más temprano que puede salir es ahora).
+- Llegada estimada = salida efectiva + traslado.
+
+Color, en este orden (gana la primera regla que se cumpla):
+1. Cita cancelada -> amarillo (espera una cita nueva).
+2. Ni saliendo AHORA llega antes del cierre de la ventana -> ROJO
+   (mover o cancelar la cita antes del cierre para evitar el No Show).
+3. Algún documento en falta o error -> amarillo (todavía hay tiempo).
+4. Con la salida planeada llega después del cierre -> amarillo
+   (adelantar la salida: todavía alcanza).
+5. Llega antes de que abra la ventana -> amarillo (salir más tarde).
+6. Si no, verde.
+
+Por qué cambió en la F5: antes el rojo comparaba la salida PLANEADA contra la
+ventana. A las 06:15 marcaba rojo una cita de las 13:00 que llegaba de sobra
+saliendo antes. Rojo debe significar "ya no llega a tiempo", así que ahora se
+decide con la hora actual.
 """
 
 import math
@@ -123,20 +136,26 @@ def calcular_semaforo(
     congestion: el contenido de data/congestion.json. Si es None, el traslado
     es de 45 min fijos.
     """
+    ahora = a_minutos(hora_actual)
     cita = a_minutos(contenedor.cita)
     ventana_inicio = cita - MINUTOS_ANTES_DE_CITA
     ventana_fin = cita + MINUTOS_DESPUES_DE_CITA
 
-    salida = a_minutos(contenedor.salida_planeada)
+    # Si la salida planeada ya pasó, el camión sigue en el patio: lo más
+    # temprano que puede salir es ahora. Sin esto, la llegada estimada sería
+    # una hora que ya no puede pasar.
+    salida = max(a_minutos(contenedor.salida_planeada), ahora)
     traslado = traslado_min(salida, congestion)
     llegada = salida + traslado
+    llega_tarde = llegada > ventana_fin
 
     # La última hora a la que el camión puede salir y todavía llegar a tiempo.
     ultima_salida = ultima_salida_para_llegar_a(ventana_fin, congestion)
-    # ¿Todavía no pasa esa hora? Entonces hay tiempo de resolver lo que falte.
-    hay_tiempo = a_minutos(hora_actual) <= ultima_salida
+    # Si ya pasó esa hora, ni saliendo ahora llega: eso (y solo eso) es rojo.
+    ya_no_llega = ahora > ultima_salida
 
     pendientes = documentos_pendientes(contenedor)
+    texto_pendientes = ", ".join(pendientes)
 
     # El orden importa: primero los casos especiales, luego lo más grave
     # (rojo) y al final el verde.
@@ -146,25 +165,45 @@ def calcular_semaforo(
         color = "amarillo"
         motivo = "Cita cancelada a tiempo, sin cargo de No Show"
         accion = "Solicitar una nueva cita a la terminal"
-    elif llegada > ventana_fin:
+    elif ya_no_llega:
         color = "rojo"
+        llegada_si_sale_ahora = ahora + traslado_min(ahora, congestion)
         motivo = (
-            f"Con salida a las {contenedor.salida_planeada} llega a las {a_hora(llegada)}, "
-            f"después del cierre de la ventana ({a_hora(ventana_fin)})"
+            f"Aunque saliera ahora ({hora_actual}) llegaría a las "
+            f"{a_hora(llegada_si_sale_ahora)}, después del cierre ({a_hora(ventana_fin)})"
         )
-        accion = f"Mover o cancelar la cita antes de las {a_hora(ventana_fin)} para evitar el No Show"
-    elif pendientes and not hay_tiempo:
-        color = "rojo"
-        motivo = f"Falta resolver: {', '.join(pendientes)}, y ya no alcanza a llegar a la ventana"
-        accion = f"Mover o cancelar la cita antes de las {a_hora(ventana_fin)} para evitar el No Show"
+        if pendientes:
+            motivo += f". Además falta resolver: {texto_pendientes}"
+        if ahora <= ventana_fin:
+            accion = (
+                f"Mover o cancelar la cita antes de las {a_hora(ventana_fin)} "
+                "para evitar el No Show"
+            )
+        else:
+            # La ventana ya cerró: el cargo ya no se puede evitar.
+            accion = "La ventana ya cerró: solicitar una nueva cita a la terminal"
     elif pendientes:
         color = "amarillo"
-        motivo = f"Falta resolver: {', '.join(pendientes)}"
-        accion = f"Resolver {', '.join(pendientes)} y salir a más tardar a las {a_hora(ultima_salida)}"
+        motivo = f"Falta resolver: {texto_pendientes}"
+        if llega_tarde:
+            motivo += (
+                f". Además, con salida a las {contenedor.salida_planeada} llegaría a las "
+                f"{a_hora(llegada)}, después del cierre ({a_hora(ventana_fin)})"
+            )
+        accion = f"Resolver {texto_pendientes} y salir a más tardar a las {a_hora(ultima_salida)}"
+    elif llega_tarde:
+        # Todo está en orden y todavía alcanza: no hay que reprogramar,
+        # basta con salir antes.
+        color = "amarillo"
+        motivo = (
+            f"Con salida a las {contenedor.salida_planeada} llegaría a las {a_hora(llegada)}, "
+            f"después del cierre de la ventana ({a_hora(ventana_fin)})"
+        )
+        accion = f"Adelantar la salida a las {a_hora(ultima_salida)} o antes"
     elif llegada < ventana_inicio:
-        # Caso que la sección 7 no menciona: todo está en orden, pero llegaría
-        # antes de que abra la ventana y tendría que esperar formado. No es
-        # verde (no cae en la ventana) ni rojo (hay tiempo de sobra).
+        # Todo está en orden, pero llegaría antes de que abra la ventana y
+        # tendría que esperar formado. No es verde (no cae en la ventana) ni
+        # rojo (hay tiempo de sobra).
         color = "amarillo"
         motivo = (
             f"Llegaría a las {a_hora(llegada)}, antes de que abra la ventana "
@@ -175,7 +214,7 @@ def calcular_semaforo(
     else:
         color = "verde"
         motivo = "Documentos completos y llega dentro de la ventana de su cita"
-        accion = f"Salir a las {contenedor.salida_planeada}"
+        accion = f"Salir a las {a_hora(salida)}"
 
     return {
         "color": color,

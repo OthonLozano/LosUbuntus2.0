@@ -1,0 +1,109 @@
+/* F5 · Estilos de Othon: tarjetas nuevas del resumen y formulario de agregar contenedor.
+   Van en este archivo (no en index.css) para no chocar con los cambios de Renata.
+   Usa las variables de color de index.css (--acento, --borde, --texto-suave...). */
+
+/* ---------- Resumen con 5 tarjetas ---------- */
+/* .resumen--kpis tiene más especificidad que .resumen, así gana sin tocar index.css. */
+.resumen.resumen--kpis { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1100px) {
+  .resumen.resumen--kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 760px) {
+  .resumen.resumen--kpis { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .resumen.resumen--kpis { grid-template-columns: 1fr; }
+}
+
+.resumen__tarjeta--horas { border-left-color: #6b4fbb; cursor: help; }
+.resumen__tarjeta--horas .resumen__texto { color: #6b4fbb; }
+.resumen__tarjeta--horas .resumen__numero { white-space: nowrap; }
+.resumen__unidad { font-size: 1.1rem; font-weight: 600; }
+.resumen__info { font-size: 0.8125rem; }
+
+/* Pulso cuando sube el contador de No Show evitados. */
+.resumen__tarjeta--pulso { animation: pulso-noshow 0.9s ease-out; }
+@keyframes pulso-noshow {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(11, 92, 173, 0.55); }
+  35% { transform: scale(1.05); }
+  100% { transform: scale(1); box-shadow: 0 0 0 16px rgba(11, 92, 173, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resumen__tarjeta--pulso { animation: none; }
+}
+
+/* ---------- Formulario de agregar contenedor ---------- */
+.formulario {
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 560px;
+}
+.formulario__titulo { margin: 0 0 4px; font-size: 1.25rem; }
+.formulario__ayuda { margin: 0 0 16px; color: var(--texto-suave); font-size: 0.875rem; }
+
+.formulario__rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 16px;
+}
+.formulario__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.formulario__campo--ancho { grid-column: 1 / -1; }
+.formulario__campo input,
+.formulario__campo select {
+  font: inherit;
+  font-weight: 400;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: #fff;
+}
+.formulario__campo input:focus-visible,
+.formulario__campo select:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+}
+
+.formulario__error { margin: 12px 0 0; color: #b42318; font-weight: 500; }
+.formulario__aviso { margin: 12px 0 0; color: var(--texto-suave); font-size: 0.875rem; }
+
+.formulario__botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.boton {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.boton:disabled { opacity: 0.6; cursor: not-allowed; }
+.boton--primario { background: var(--acento); color: #fff; border: 1px solid var(--acento); }
+.boton--secundario { background: #fff; color: var(--acento); border: 1px solid var(--acento); }
+
+/* Bloque "Llenar desde carta porte (IA)" */
+.formulario__ia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px dashed var(--borde);
+  border-radius: 6px;
+}
+.formulario__ia input[type='file'] { display: none; }
+
+@media (max-width: 560px) {
+  .formulario__rejilla { grid-template-columns: 1fr; }
+}

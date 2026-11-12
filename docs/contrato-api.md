@@ -93,7 +93,7 @@ Cada contenedor que regresa la API incluye además estos campos calculados:
 | `POST /api/contenedores/{id}/chat` | Mensaje de la agencia; la IA lo interpreta | F4 |
 | `POST /api/reiniciar` | Regresar la demo a su estado inicial | F5 |
 | `POST /api/contenedores` | Agregar un contenedor | F5 |
-| `POST /api/extraer-viaje` | La IA lee una carta porte para llenar el formulario (opcional) | F5 |
+| `POST /api/extraer-viaje` | La IA lee una carta porte para llenar el formulario | F5 |
 
 Nota: el `id` lleva un espacio (`LTSU 402219-8`). En el frontend hay que codificarlo con `encodeURIComponent(id)` al armar la URL.
 
@@ -251,7 +251,7 @@ Nunca regresa la API key; `ia_configurada` solo dice si existe.
 { "ok": true, "hora_actual": "06:15" }
 ```
 
-**`POST /api/contenedores`** (por implementar): agrega un contenedor y lo regresa con su color calculado (`201`).
+**`POST /api/contenedores`** (implementado): agrega un contenedor y lo regresa con su color calculado (`201`).
 
 ```json
 {
@@ -271,14 +271,16 @@ Nunca regresa la API key; `ia_configurada` solo dice si existe.
 - Responde `409` si el `id` ya existe y `422` si algún dato no es válido (el motivo va en `detail`).
 - Se guarda en memoria, como todo lo demás: `POST /api/reiniciar` o reiniciar el servidor lo borran.
 
-**`POST /api/extraer-viaje`** (opcional, por implementar): se envía como `multipart/form-data` con el campo `archivo` (PDF, JPG o PNG, máximo 10 MB). La IA lee una carta porte y regresa los datos para **llenar** el formulario de agregar contenedor; no guarda nada.
+**`POST /api/extraer-viaje`** (implementado): se envía como `multipart/form-data` con el campo `archivo` (PDF, JPG o PNG, máximo 10 MB). La IA lee una carta porte y regresa los datos para **llenar** el formulario de agregar contenedor; no guarda nada.
 
 ```json
 { "id": "ABCD 123456-7", "operador": "R. Gómez", "placas": "52-AM-9F", "terminal": "ICAVE", "respaldo": false }
 ```
 
 - Un campo que la IA no encuentre llega como `""` (o `null` en `terminal`).
-- Si `respaldo` es `true`, hay que mostrar la etiqueta "respuesta de respaldo"; viene además `motivo_respaldo`.
+- `id` se regresa ya en el formato `"ABCD 123456-7"` cuando se puede.
+- Mismos límites de archivo que `revisar-documento`: `415` si no es PDF, JPG o PNG y `413` si pasa de 10 MB.
+- Si `respaldo` es `true`, todos los campos llegan vacíos (sin IA no se puede leer el archivo, y no inventamos datos de ejemplo). Hay que mostrar la etiqueta "respuesta de respaldo"; viene además `motivo_respaldo`.
 
 ## Respuestas de respaldo
 
