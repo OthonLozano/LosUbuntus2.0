@@ -18,6 +18,9 @@ TipoDocumento = Literal[
 ]
 EstadoDocumento = Literal["ok", "falta", "error", "na"]
 Color = Literal["verde", "amarillo", "rojo"]
+NivelCongestion = Literal["baja", "media", "alta"]
+# "movida" y "cancelada" las pone POST /reprogramar (F2).
+EstadoCita = Literal["activa", "movida", "cancelada"]
 
 # Las horas van como texto "HH:MM" en 24 h. Esta expresión acepta de 00:00 a 23:59.
 PATRON_HORA = r"^([01]\d|2[0-3]):[0-5]\d$"
@@ -43,6 +46,8 @@ class Contenedor(BaseModel):
     placas: str
     salida_planeada: Hora
     documentos: list[Documento]
+    # Tiene valor por defecto para que el JSON de datos no tenga que traerlo.
+    estado_cita: EstadoCita = "activa"
 
 
 class ContenedorConSemaforo(Contenedor):
@@ -57,6 +62,9 @@ class ContenedorConSemaforo(Contenedor):
     ventana_fin: str
     llegada_estimada: str
     accion_sugerida: str
+    # F2: cuánto tarda el traslado y con qué congestión (simulada) se calculó.
+    traslado_min: int
+    congestion: NivelCongestion
 
 
 class CambioDocumento(BaseModel):
@@ -69,12 +77,38 @@ class CambioDocumento(BaseModel):
     nota: Optional[str] = ""
 
 
+class SimularSalida(BaseModel):
+    """Cuerpo de POST /api/contenedores/{id}/simular-salida."""
+
+    salida_planeada: Hora
+
+
+class Reprogramar(BaseModel):
+    """Cuerpo de POST /api/contenedores/{id}/reprogramar.
+
+    Con "mover" hay que mandar nueva_cita; con "cancelar" no se manda.
+    """
+
+    accion: Literal["mover", "cancelar"]
+    nueva_cita: Optional[Hora] = None
+
+
+class Congestion(BaseModel):
+    """Respuesta de GET /api/congestion. Todo es simulado."""
+
+    simulada: bool
+    nota: str
+    traslado_base_min: int
+    multiplicadores: dict[NivelCongestion, float]
+    por_hora: dict[str, NivelCongestion]
+
+
 class Resumen(BaseModel):
     """Respuesta de GET /api/resumen."""
 
     verde: int
     amarillo: int
     rojo: int
-    # Se llenan en la F2, cuando exista POST /reprogramar. En F1 valen 0.
+    # Los suma POST /reprogramar cuando se mueve o cancela a tiempo una cita en rojo.
     no_show_evitados: int
     ahorro_mxn: int
